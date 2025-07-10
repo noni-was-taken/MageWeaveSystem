@@ -4,8 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MageWeave</title>
-    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+    @routes
+    @viteReactRefresh
+    @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+    @inertiaHead
 </head>
 <body class="bg-blue text-gray-900">
+    @inertia
 
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.remove('bg-blue');
+        });
+    </script>
 </body>
