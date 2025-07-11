@@ -5,6 +5,6 @@ export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
 
     return (
-        
+        <h1>how the fuck does that work?</h1>   
     )
 }

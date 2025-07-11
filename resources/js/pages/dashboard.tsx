@@ -2,9 +2,7 @@ import React from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
-export default function Welcome() {
-    const { auth } = usePage<SharedData>().props;
-
+export default function dashboard() {
     return (
         <>
             <Head title="MageWeave - Dashboard" />
@@ -16,3 +14,5 @@ export default function Welcome() {
         </>
     )
 }
+
+console.log('Dashboard page loaded');

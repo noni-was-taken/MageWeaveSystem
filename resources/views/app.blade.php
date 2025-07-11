@@ -11,7 +11,6 @@
 </head>
 <body class="bg-blue text-gray-900">
     @inertia
-
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             document.body.classList.remove('bg-blue');
