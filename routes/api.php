@@ -13,6 +13,8 @@ Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
 // Update info routes
-Route::get('/updates', [UpdateInfoController::class, 'index']);
-Route::post('/updates', [UpdateInfoController::class, 'store']);
+Route::get('/update-logs', [UpdateInfoController::class, 'index']);
+Route::post('/update-logs', [UpdateInfoController::class, 'store']);
+Route::get('/update-logs/{id}', [UpdateInfoController::class, 'show']);
+Route::delete('/update-logs/{id}', [UpdateInfoController::class, 'destroy']);
 

@@ -1,36 +1,43 @@
-import React, { useState} from 'react';
+import React, {useState} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, Trophy, SquareKanban } from 'lucide-react';
 
 
 export default function dashboard() {
-    const [searchTerm, setSearchTerm] = useState('');
+  const { products } = usePage().props as { // products
+    products: {
+      product_id: number;
+      product_name: string;
+      product_qty: number;
+      product_price: number;
+    }[];
+  };
+
+    const { updateLogs } = usePage().props as { // update logs
+    updateLogs: {
+        update_id: number;
+        value_update: number;
+        product_id: number;
+        description: string;
+        update_date: string;
+        }[];
+    };
+
+    const totalValue = products.reduce((sum, p) => { // total value
+        return sum + (Number(p.product_price) * Number(p.product_qty));
+        }, 0);
+    
+    const totalQty = products.reduce((sum, p) => { // total qty
+        return sum + (Number(p.product_qty));
+        }, 0);
+    
     const [showWeeklySummary, setShowWeeklySummary] = useState(true);
     
-    const [stockData, setStockData] = useState([
-        { id: 1, itemName: 'Item 1', quantity: 150, price: 150.00 },
-        { id: 2, itemName: 'Item 2', quantity: 23, price: 350.00 },
-        { id: 3, itemName: 'Item 3', quantity: 61, price: 780.00 },
-        { id: 4, itemName: 'Item 4', quantity: 1, price: 50.00 },
-        { id: 5, itemName: 'Item 5', quantity: 3000, price: 10.00 },
-        { id: 6, itemName: 'Item 6', quantity: 100, price: 1550.00 },
-        { id: 7, itemName: 'Item 6', quantity: 100, price: 1550.00 },
-        { id: 8, itemName: 'Item 6', quantity: 0, price: 1550.00 },
-        { id: 9, itemName: 'Item 6', quantity: 100, price: 1550.00 },
-        { id: 10, itemName: 'Item 6', quantity: 100, price: 1550.00 }
-    ]);
+    
+    const [searchTerm, setSearchTerm] = useState('');
+    const [stockData, setStockData] = useState(products);
 
-    const [updateLogs, setUpdateLogs] = useState([
-        { id: 1, value: '+50', formId: 1, description: 'Shipment', time: '15:30' },
-        { id: 2, value: '-5', formId: 4, description: 'Sale', time: '13:34' },
-        { id: 3, value: '+46', formId: 2, description: 'Shipment', time: '13:10' },
-        { id: 4, value: '+15', formId: 5, description: 'Shipment', time: '12:50' },
-        { id: 5, value: '+5', formId: 3, description: 'Refunded', time: '12:13' },
-        { id: 6, value: '-48', formId: 1, description: 'Sale', time: '11:45' },
-        { id: 7, value: '-45', formId: 2, description: 'Sale', time: '11:38' },
-        { id: 8, value: '-12', formId: 6, description: 'Sale', time: '11:23' }
-    ]);
     
     const [summaryData] = useState({
         weekRange: 'Week of June 30 - July 6',
@@ -58,26 +65,26 @@ export default function dashboard() {
     });
 
     const filteredStock = stockData.filter(item =>
-        item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+        item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const getLowStockAlerts = () => {
         const alerts: { message: string; level: string }[] = [];
 
         stockData.forEach(item => {
-            if (item.quantity <= 0) {
+            if (item.product_qty <= 0) {
                 alerts.push({
-                    message: `${item.itemName} is out of stock.`,
+                    message: `${item.product_name} is out of stock.`,
                     level: 'critical'
                 });
-            } else if (item.quantity < 20) {
+            } else if (item.product_qty < 20) {
                 alerts.push({
-                    message: `${item.itemName} is critically low on stock.`,
+                    message: `${item.product_name} is critically low on stock.`,
                     level: 'warning'
                 });
-            } else if (item.quantity < 50) {
+            } else if (item.product_qty < 50) {
                 alerts.push({
-                    message: `${item.itemName} is running low on stock.`,
+                    message: `${item.product_name} is running low on stock.`,
                     level: 'info'
                 });
             }
@@ -132,7 +139,7 @@ export default function dashboard() {
                             <div className='flex items-center justify-between'>
                                 <div>
                                     <p className='text-gray-600 text-sm'>Total Inventory Value</p>
-                                    <p className='text-2xl font-bold text-gray-800'>₱300,123.69</p>
+                                    <p className='text-2xl font-bold text-gray-800'>₱{totalValue.toFixed(2)}</p>
                                 </div>
                                 <TrendingUp className='w-8 h-8'/>
                             </div>
@@ -142,7 +149,7 @@ export default function dashboard() {
                             <div className='flex items-center justify-between'>
                                 <div>
                                     <p className='text-gray-600 text-sm'>Total Quantity</p>
-                                    <p className='text-2xl font-bold text-gray-800'>3,123</p>
+                                    <p className='text-2xl font-bold text-gray-800'>{totalQty}</p>
                                 </div>
                                 <Package className='w-8 h-8'/>
                             </div>
@@ -175,23 +182,23 @@ export default function dashboard() {
                                 </thead>
                                 <tbody>
                                     {filteredStock.map((item) => (
-                                        <tr key={item.id} className='border-b border-gray-100 hover:bg-gray-50'>
+                                        <tr key={item.product_id} className='border-b border-gray-100 hover:bg-gray-50'>
                                             <td className='py-3 px-4'>
                                                 <Edit className='w-4 h-4 text-gray-400' />
                                             </td>
-                                            <td className='py-3 px-4'> {item.id}
+                                            <td className='py-3 px-4'> {item.product_id}
                                             </td>
-                                            <td className='py-3 px-4 font-medium text-gray-800'>{item.itemName}</td>
+                                            <td className='py-3 px-4 font-medium text-gray-800'>{item.product_name}</td>
                                             <td className='py-3 px-4'>
                                                 <span className={`px-2 py-1 rounded-full text-sm ${
-                                                    item.quantity < 50 ? 'bg-red-100 text-red-800' :
-                                                    item.quantity < 100 ? 'bg-yellow-100 text-yellow-800' :
+                                                    item.product_qty < 50 ? 'bg-red-100 text-red-800' :
+                                                    item.product_qty < 100 ? 'bg-yellow-100 text-yellow-800' :
                                                     'bg-green-100 text-green-800'
                                                 }`}>
-                                                    {item.quantity}
+                                                    {item.product_qty}
                                                 </span>
                                             </td>
-                                            <td className='py-3 px-4 text-gray-700'>₱{item.price.toFixed(2)}</td>
+                                            <td className='py-3 px-4 text-gray-700'>₱{Number(item.product_price).toFixed(2)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -203,21 +210,21 @@ export default function dashboard() {
                         <h2 className='text-xl font-bold text-gray-800 mb-6'>Update Logs</h2>
                         <div className='space-y-4 max-h-96 overflow-y-auto'>
                             {updateLogs.map((log) => (
-                                <div key={log.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                                <div key={log.update_id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
                                     <div className='flex items-center space-x-3'>
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                                            log.value.startsWith('+') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${Number(
+                                            log.value_update) >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                         }`}>
-                                            {log.value}
+                                            {log.value_update}
                                         </div>
                                         <div>
-                                            <p className='text-sm font-medium text-gray-800'>Form {log.formId}</p>
+                                            <p className='text-sm font-medium text-gray-800'>Form {log.product_id}</p>
                                             <p className='text-xs text-gray-600'>{log.description}</p>
                                         </div>
                                     </div>
                                     <div className='flex items-center text-gray-500'>
                                         <Clock className='w-4 h-4 mr-1'></Clock>
-                                        <span className='text-sm'>{log.time}</span>
+                                        <span className='text-sm'>{log.update_date.slice(11, 16)}</span>
                                     </div>
                                     
                                 </div>

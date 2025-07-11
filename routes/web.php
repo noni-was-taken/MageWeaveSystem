@@ -20,7 +20,12 @@ Route::post('/custom-login', [AuthController::class, 'login']);
 Route::get('/test', fn() => Inertia::render('Test'));
 
 Route::get('/dashboard', function () {
-    return Inertia::render('dashboard');
+    $products = DB::select('SELECT * FROM products');
+    $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
+    return Inertia::render('dashboard', [
+        'products' => $products,
+        'updateLogs' => $logs,
+    ]);
 });
 
 require __DIR__.'/settings.php';
