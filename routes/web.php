@@ -19,6 +19,9 @@ Route::post('/custom-login', [AuthController::class, 'login']);
 // (Optional) Test page
 Route::get('/test', fn() => Inertia::render('Test'));
 
+Route::get('/dashboard', function () {
+    return Inertia::render('dashboard');
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
