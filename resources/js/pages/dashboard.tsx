@@ -1,11 +1,12 @@
 import React, { useState} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Search, Edit, Plus, Minus, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon } from 'lucide-react';
+import { ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, Trophy, SquareKanban } from 'lucide-react';
 
 
 export default function dashboard() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [showWeeklySummary, setShowWeeklySummary] = useState(true);
     
     const [stockData, setStockData] = useState([
         { id: 1, itemName: 'Item 1', quantity: 150, price: 150.00 },
@@ -31,6 +32,31 @@ export default function dashboard() {
         { id: 8, value: '-12', formId: 6, description: 'Sale', time: '11:23' }
     ]);
     
+    const [summaryData] = useState({
+        weekRange: 'Week of June 30 - July 6',
+        date: 'as of June 30, 2025',
+        topSales: [
+            { name: 'Item 1', sales: 173 },
+            { name: 'Item 5', sales: 156 },
+            { name: 'Item 4', sales: 142 }
+        ],
+        leastSold: [
+            { name: 'Item 6', sales: 12 },
+            { name: 'Item 2', sales: 28 },
+            { name: 'Item 3', sales: 35 }
+        ],
+        highestSellingItem: {
+            name: 'Item 1',
+            stocksSold: 173
+        },
+        totalOrders: {
+            ordered: 17,
+            shipped: 5,
+            totalStocksOrdered: 1390,
+            totalStocksSold: 736
+        }
+    });
+
     const filteredStock = stockData.filter(item =>
         item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -122,7 +148,7 @@ export default function dashboard() {
                             </div>
                         </div>
                         {/* view weekly summary button */}
-                        <div className='bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center  justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200'>
+                        <div onClick={()=>setShowWeeklySummary(true)} className='bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center  justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200'>
                             <div className='flex items-center justify-center'>
                                 <p className='text-2xl font-semibold'>View Weekly Summary</p>
                             </div>
@@ -224,6 +250,78 @@ export default function dashboard() {
                     </div>
                 </div>
             </div>    
+            {/* Weekly Summary Viewer */}
+            {showWeeklySummary && (
+                <div className='fixed inset-0 flex items-center bg-black/40 justify-center z-50 backdrop-blur-sm'>
+                    <div className='bg-white flex flex-col rounded-xl shadow-lg max-w-full overflow-auto m-18 p-8 border border-gray-200'>
+                        <div className='flex items-center justify-between mb-6'>
+                            <div>
+                                <h2 className='text-2xl font-bold text-gray-800'>Summary</h2>
+                                <p className='text-gray-600'>{summaryData.weekRange}</p>
+                                <p className='text-sm text-gray-500'>{summaryData.date}</p>
+                            </div>
+                            <Calendar className='w-8 h-8 text-gray-400' />
+                        </div>
+
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                            {/* Top Sales */}
+                            <div className='bg-gray-50 p-4 rounded-lg'>
+                                <h3 className='text-lg font-semibold text-gray-800 mb-3 flex items-center'>
+                                    <ChartBar className='w-5 h-5 mr-2 text-green-500' />
+                                    Top Sales
+                                </h3>
+                                <div className='space-y-2'>
+                                    {summaryData.topSales.map((item, index) => (
+                                        <div key={index} className='flex justify-between items-center'>
+                                            <span className='text-sm text-gray-700'>• {item.name}</span>
+                                            <span className='text-sm font-medium text-gray-800'>{item.sales}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Least Sold */}
+                            <div className='bg-gray-50 p-4 rounded-lg'>
+                                <h3 className='text-lg font-semibold text-gray-800 mb-3 flex items-center'>
+                                    <Target className='w-5 h-5 mr-2 text-red-500' />
+                                    Least Sold
+                                </h3>
+                                <div className='space-y-2'>
+                                    {summaryData.leastSold.map((item, index) => (
+                                        <div key={index} className='flex justify-between items-center'>
+                                            <span className='text-sm text-gray-700'>• {item.name}</span>
+                                            <span className='text-sm font-medium text-gray-800'>{item.sales}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Total Orders and Sales */}
+                            <div className='bg-gray-50 p-4 rounded-lg'>
+                                <h3 className='text-lg font-semibold text-gray-800 mb-3 flex items-center'>
+                                    <SquareKanban className='w-5 h-5 mr-2 text-blue-500' />
+                                    Total Orders and Sales
+                                </h3>
+                                <div className='space-y-2'>
+                                    <div className='flex justify-between'>
+                                        <span className='text-sm text-gray-700'>• {summaryData.totalOrders.ordered} ordered shipments</span>
+                                    </div>
+                                    <div className='flex justify-between'>
+                                        <span className='text-sm text-gray-700'>• {summaryData.totalOrders.shipped} ordered shipments</span>
+                                    </div>
+                                    <div className='text-xs text-gray-600 mt-2'>
+                                        <p>{summaryData.totalOrders.totalStocksOrdered} total stocks ordered</p>
+                                        <p>{summaryData.totalOrders.totalStocksSold} total stocks sold</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowWeeklySummary(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}                          
         </>
     )
 }
