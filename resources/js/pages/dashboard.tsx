@@ -1,14 +1,227 @@
-import React from 'react';
+import React, { useState} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { Search, Edit, Plus, Minus, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon } from 'lucide-react';
+
 
 export default function dashboard() {
+    const [searchTerm, setSearchTerm] = useState('');
+    
+    const [stockData, setStockData] = useState([
+        { id: 1, itemName: 'Item 1', quantity: 150, price: 150.00 },
+        { id: 2, itemName: 'Item 2', quantity: 23, price: 350.00 },
+        { id: 3, itemName: 'Item 3', quantity: 61, price: 780.00 },
+        { id: 4, itemName: 'Item 4', quantity: 1, price: 50.00 },
+        { id: 5, itemName: 'Item 5', quantity: 3000, price: 10.00 },
+        { id: 6, itemName: 'Item 6', quantity: 100, price: 1550.00 },
+        { id: 7, itemName: 'Item 6', quantity: 100, price: 1550.00 },
+        { id: 8, itemName: 'Item 6', quantity: 0, price: 1550.00 },
+        { id: 9, itemName: 'Item 6', quantity: 100, price: 1550.00 },
+        { id: 10, itemName: 'Item 6', quantity: 100, price: 1550.00 }
+    ]);
+
+    const [updateLogs, setUpdateLogs] = useState([
+        { id: 1, value: '+50', formId: 1, description: 'Shipment', time: '15:30' },
+        { id: 2, value: '-5', formId: 4, description: 'Sale', time: '13:34' },
+        { id: 3, value: '+46', formId: 2, description: 'Shipment', time: '13:10' },
+        { id: 4, value: '+15', formId: 5, description: 'Shipment', time: '12:50' },
+        { id: 5, value: '+5', formId: 3, description: 'Refunded', time: '12:13' },
+        { id: 6, value: '-48', formId: 1, description: 'Sale', time: '11:45' },
+        { id: 7, value: '-45', formId: 2, description: 'Sale', time: '11:38' },
+        { id: 8, value: '-12', formId: 6, description: 'Sale', time: '11:23' }
+    ]);
+    
+    const filteredStock = stockData.filter(item =>
+        item.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const getLowStockAlerts = () => {
+        const alerts: { message: string; level: string }[] = [];
+
+        stockData.forEach(item => {
+            if (item.quantity <= 0) {
+                alerts.push({
+                    message: `${item.itemName} is out of stock.`,
+                    level: 'critical'
+                });
+            } else if (item.quantity < 20) {
+                alerts.push({
+                    message: `${item.itemName} is critically low on stock.`,
+                    level: 'warning'
+                });
+            } else if (item.quantity < 50) {
+                alerts.push({
+                    message: `${item.itemName} is running low on stock.`,
+                    level: 'info'
+                });
+            }
+        });
+
+        return alerts;
+    };
+
     return (
         <>
             <Head title="MageWeave - Dashboard" />
-            <div className='h-[150vh] bg-white'>
-                <div className='bg-amber-300 w-full h-28 p-2.5 flex justify-between items-center'>
-                    <h1 className='text-3xl font-bold md:self-center text-5xl ml-8'>MageWeave</h1>
+            <div className='min-h-screen bg-gray-50'>
+                {/* header */}
+                <div className='w-full h-28 p-2.5 flex items-center shadow-lg bg-white'>
+                    {/* logo */}
+                    <div className='flex flex-col justify-center w-1/6 h-full items-center space-x-2 '>
+                        <h1 className='text-3xl font'>|MageWeave Logo|</h1>
+                        <h1 className='text-md '>Cozy Textiles</h1>
+                    </div>
+                    {/* search bar */}
+                    <div className='flex ml-8 w-2/5 items-center h-full'> 
+                        <input type="search" name="item-search" id="item" 
+                        placeholder="Search..." 
+                        className="w-full px-8 py-2 text-lg rounded-xl text-gray-700 border border-gray-200 shadow-xl h-1/2"/>
+                    </div>
+                    {/* current date */}
+                    <div className='w-1/6 h-full flex items-center justify-center '>
+                        <div className='text-center'>
+                            <h1 className='text-xl text-gray-700 font-semibold'>July 11, 2025</h1>
+                            <p className='text-sm text-gray-500'>Friday</p>
+                        </div>
+                    </div>
+                    {/* user profile */}
+                    <div className='ml-auto w-2/12 h-full flex justify-center items-center'>
+                        <div className='flex items-center space-x-3'>
+                            <div className='w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold'>
+                                A
+                            </div>
+                            <div>
+                                <h1 className='text-lg text-gray-700 font-semibold'>Admin</h1>
+                                <p className='text-sm text-gray-500'>user321</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* first layer */}
+                <div className='p-8 w-auto'>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
+                        {/* total value */}
+                        <div className='bg-white p-6 rounded-xl shadow-lg border border-gray-200'>
+                            <div className='flex items-center justify-between'>
+                                <div>
+                                    <p className='text-gray-600 text-sm'>Total Inventory Value</p>
+                                    <p className='text-2xl font-bold text-gray-800'>₱300,123.69</p>
+                                </div>
+                                <TrendingUp className='w-8 h-8'/>
+                            </div>
+                        </div>
+                        {/* total quantity */}
+                        <div className='bg-white p-6 rounded-xl shadow-lg border border-gray-200'>
+                            <div className='flex items-center justify-between'>
+                                <div>
+                                    <p className='text-gray-600 text-sm'>Total Quantity</p>
+                                    <p className='text-2xl font-bold text-gray-800'>3,123</p>
+                                </div>
+                                <Package className='w-8 h-8'/>
+                            </div>
+                        </div>
+                        {/* view weekly summary button */}
+                        <div className='bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center  justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200'>
+                            <div className='flex items-center justify-center'>
+                                <p className='text-2xl font-semibold'>View Weekly Summary</p>
+                            </div>
+                            <CalendarIcon className='h-8 w-8 mr-2 text-green-500'></CalendarIcon>
+                        </div>
+                    </div>
+                </div>
+
+                {/* second layer */}
+                <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 px-4'>
+                    {/* Live Stock Overview */}
+                    <div className='lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-gray-200'>
+                        <h2 className='text-xl font-bold text-gray-800 mb-6'> Live Stock Overview </h2>
+                        <div className='space-y-4 max-h-96 overflow-x-auto overflow-y-auto'>
+                            <table className='min-w-full divide-gray-200'>
+                                <thead>
+                                    <tr className='border-b border-gray-200'>
+                                        <th className='text-left py-3 px-4 text-gray-600 font-semibold'></th>
+                                        <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Item ID</th>
+                                        <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Item Name</th>
+                                        <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Quantity</th>
+                                        <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredStock.map((item) => (
+                                        <tr key={item.id} className='border-b border-gray-100 hover:bg-gray-50'>
+                                            <td className='py-3 px-4'>
+                                                <Edit className='w-4 h-4 text-gray-400' />
+                                            </td>
+                                            <td className='py-3 px-4'> {item.id}
+                                            </td>
+                                            <td className='py-3 px-4 font-medium text-gray-800'>{item.itemName}</td>
+                                            <td className='py-3 px-4'>
+                                                <span className={`px-2 py-1 rounded-full text-sm ${
+                                                    item.quantity < 50 ? 'bg-red-100 text-red-800' :
+                                                    item.quantity < 100 ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-green-100 text-green-800'
+                                                }`}>
+                                                    {item.quantity}
+                                                </span>
+                                            </td>
+                                            <td className='py-3 px-4 text-gray-700'>₱{item.price.toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {/* update log */}
+                    <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-200'>
+                        <h2 className='text-xl font-bold text-gray-800 mb-6'>Update Logs</h2>
+                        <div className='space-y-4 max-h-96 overflow-y-auto'>
+                            {updateLogs.map((log) => (
+                                <div key={log.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                                    <div className='flex items-center space-x-3'>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                            log.value.startsWith('+') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }`}>
+                                            {log.value}
+                                        </div>
+                                        <div>
+                                            <p className='text-sm font-medium text-gray-800'>Form {log.formId}</p>
+                                            <p className='text-xs text-gray-600'>{log.description}</p>
+                                        </div>
+                                    </div>
+                                    <div className='flex items-center text-gray-500'>
+                                        <Clock className='w-4 h-4 mr-1'></Clock>
+                                        <span className='text-sm'>{log.time}</span>
+                                    </div>
+                                    
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* third layer - alerts*/}
+                <div className='bg-white shadow-lg p-6 mt-8 border border-gray-200'>
+                    <h2 className='text-xl font-bold text-gray-800 mb-6'>Alerts</h2>
+                    <div className='space-y-4 max-h-96 overflow-y-auto'>
+                        {getLowStockAlerts().map((alert, index) => (
+                            <div key={index} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                                <div className='flex items-center space-x-3'>
+                                    <ClockAlertIcon className={`w-6 h-6 ${
+                                        alert.level === 'critical' ? 'text-red-950' :
+                                        alert.level === 'warning' ? 'text-red-500' :
+                                        'text-yellow-500'
+                                    }`} />
+                                    <div>
+                                        <p className='text-sm font-medium text-gray-800'>Low Stock Alert</p>
+                                        <p className='text-xs text-gray-600'>{alert.message}</p>
+                                    </div>
+                                </div>
+                                <span className='text-sm text-gray-500'>Now</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>    
         </>
