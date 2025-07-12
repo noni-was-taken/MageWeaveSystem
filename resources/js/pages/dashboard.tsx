@@ -330,7 +330,7 @@ console.log("User from Laravel session:", user);
                 <div className='w-full h-28 p-2.5 flex items-center shadow-lg bg-white'>
                     {/* logo */}
                     <div className='flex flex-col justify-center w-1/6 h-full items-center space-x-2 '>
-                        <h1 className='text-3xl font'>|MageWeave Logo|</h1>
+                        <img src="/MageWeave_Logo.png" alt="MageWeave Logo" className='w-full h-3/4 object-contain' />
                         <h1 className='text-md '>Cozy Textiles</h1>
                     </div>
                     {/* current date */}

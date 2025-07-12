@@ -16,9 +16,6 @@ Route::get('/logins', fn() => Inertia::render('logins'));
 // Handle login POST from React/Inertia
 Route::post('/custom-login', [AuthController::class, 'login']);
 
-// (Optional) Test page
-Route::get('/test', fn() => Inertia::render('Test'));
-
 Route::get('/logout', function () {
     Session::flush(); // clear all session data
     return redirect('/logins')->with('success', 'Logged out successfully');
