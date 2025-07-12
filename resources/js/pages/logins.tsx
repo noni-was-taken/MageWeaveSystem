@@ -24,38 +24,45 @@ const Logins: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', padding: 24, backgroundColor: '#f9fafb', borderRadius: 8 }}>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="user_id">User ID</label>
-          <input
-            type="text"
-            id="user_id"
-            value={userId}
-            onChange={e => setUserId(e.target.value)}
-            required
-            style={{ width: '100%', padding: 8, marginTop: 4 }}
-          />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: 8, marginTop: 4 }}
-          />
-        </div>
-        {error && (
-          <div style={{ color: 'red', marginBottom: 16 }}>{error}</div>
-        )}
-        <button type="submit" style={{ padding: '8px 16px' }}>
-          Login
-        </button>
-      </form>
+    <div className='flex flex-col gap-7 items-center justify-center h-screen w-full bg-white'>
+      <div className='h-1/12 w-1/6 items-center justify-center flex'>
+        <h1 className='text-3xl font-bold text-center'>|MageWeave Logo|</h1>
+      </div>
+      <div className='border border-gray-300 h-auto w-1/3 p-8 rounded-lg shadow-lg'>
+        <h2 className='font-bold text-2xl'>Login</h2>
+        <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+          <div className='mb-4 mt-4'>
+            <label htmlFor="user_id" className='text-gray-400'>User ID</label>
+            <input
+              type="text"
+              id="user_id"
+              value={userId}
+              onChange={e => setUserId(e.target.value)}
+              required
+              className='w-full p-2 mt-2 border border-gray-300 rounded'
+              />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label htmlFor="password" className='text-gray-400'>Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className='w-full p-2 mt-2 border border-gray-300 rounded'
+              />
+          </div>
+          {error && (
+            <div style={{ color: 'red', marginBottom: 16 }}>{error}</div>
+          )}
+          <div className='w-full flex justify-center'>
+            <button type="submit" className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600'>
+              Login
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
