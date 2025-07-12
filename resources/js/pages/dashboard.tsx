@@ -1,29 +1,30 @@
-import React, {useState} from 'react';
+import React, {use, useState} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, Trophy, SquareKanban } from 'lucide-react';
+import { ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
 
 
-export default function dashboard() {
-  const { products } = usePage().props as { // products
+type DashboardProps = {
     products: {
-      product_id: number;
-      product_name: string;
-      product_qty: number;
-      product_price: number;
+        product_id: number;
+        product_name: string;
+        product_qty: number;
+        product_price: number;
     }[];
-  };
-
-    const { updateLogs } = usePage().props as { // update logs
+    
     updateLogs: {
         update_id: number;
         value_update: number;
         product_id: number;
         description: string;
         update_date: string;
-        }[];
-    };
+    }[];
+};
 
+
+export default function dashboard() {
+    const { products, updateLogs } = usePage<DashboardProps>().props; 
+    
     const totalValue = products.reduce((sum, p) => { // total value
         return sum + (Number(p.product_price) * Number(p.product_qty));
         }, 0);
@@ -32,8 +33,8 @@ export default function dashboard() {
         return sum + (Number(p.product_qty));
         }, 0);
     
-    const [showWeeklySummary, setShowWeeklySummary] = useState(true);
-    
+    const [showWeeklySummary, setShowWeeklySummary] = useState(false);
+    const [showEditPage, setShowEditPage] = useState(false);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [stockData, setStockData] = useState(products);
@@ -169,7 +170,7 @@ export default function dashboard() {
                     {/* Live Stock Overview */}
                     <div className='lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-gray-200'>
                         <h2 className='text-xl font-bold text-gray-800 mb-6'> Live Stock Overview </h2>
-                        <div className='space-y-4 max-h-96 overflow-x-auto overflow-y-auto'>
+                        <div className='space-y-4 h-96 overflow-x-auto overflow-y-auto'>
                             <table className='min-w-full divide-gray-200'>
                                 <thead>
                                     <tr className='border-b border-gray-200'>
@@ -184,7 +185,7 @@ export default function dashboard() {
                                     {filteredStock.map((item) => (
                                         <tr key={item.product_id} className='border-b border-gray-100 hover:bg-gray-50'>
                                             <td className='py-3 px-4'>
-                                                <Edit className='w-4 h-4 text-gray-400' />
+                                                <Edit onClick={()=>setShowEditPage(true)} className='w-4 h-4 text-gray-400 hover:text-black' />
                                             </td>
                                             <td className='py-3 px-4'> {item.product_id}
                                             </td>
@@ -208,7 +209,7 @@ export default function dashboard() {
                     {/* update log */}
                     <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-200'>
                         <h2 className='text-xl font-bold text-gray-800 mb-6'>Update Logs</h2>
-                        <div className='space-y-4 max-h-96 overflow-y-auto'>
+                        <div className='space-y-4 h-96 overflow-y-auto'>
                             {updateLogs.map((log) => (
                                 <div key={log.update_id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
                                     <div className='flex items-center space-x-3'>
@@ -326,6 +327,57 @@ export default function dashboard() {
                         <button onClick={() => setShowWeeklySummary(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                             Close
                         </button>
+                    </div>
+                </div>
+            )}
+            {showEditPage && (
+                <div className='fixed inset-0 flex items-center bg-black/40 justify-center z-50 backdrop-blur-sm'>
+                    {/* Edit Page */}
+                    <div className='bg-white flex flex-col rounded-xl shadow-lg w-2/5 h-1/2 overflow-auto m-18 p-8 border border-gray-200'>
+                        <div className='flex items-center justify-between mb-6'>
+                            <div>
+                                <h2 className='text-2xl font-bold text-gray-800'>Edit</h2>
+                                <p className='text-gray-600'>Product Name</p>
+                                <p className='text-sm text-gray-500'>Product ID</p>
+                            </div>
+                            <Edit className='w-8 h-8 text-gray-400' />
+                        </div>
+
+                        <div className= 'w-full h-3/4 flex flex-col justify-between'>
+                            <div className='w-full h-1/4 flex items-center gap-2'>
+                                <h1 className='text-lg font-bold text-gray-800 '>Product Name:</h1>
+                                <p className='text-md text-grey-500'>Old-Product Name</p>
+                                <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
+                                    <MoveRightIcon className='h-8 w-8'/>
+                                    <input type="text" placeholder='New Product Name' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                </div>
+                            </div>
+                            <div className='w-full h-1/4 flex items-center gap-2'>
+                                <h1 className='text-lg font-bold text-gray-800 '>Product Quantity:</h1>
+                                <p className='text-md text-grey-500'>618</p>
+                                <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
+                                    <MoveRightIcon className='h-8 w-8'/>
+                                    <input type="text" placeholder='New Quantity' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                </div>
+                            </div>
+                            <div className='w-full h-1/4 flex items-center gap-2'>
+                                <h1 className='text-lg font-bold text-gray-800 '>Product Price:</h1>
+                                <p className='text-md text-grey-500'>₱13.73</p>
+                                <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
+                                    <MoveRightIcon className='h-8 w-8'/>
+                                    <input type="text" placeholder='New Price' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='flex justify-between'>
+                            <button onClick={() => setShowEditPage(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                                Close
+                            </button>
+                            <button onClick={() => setShowEditPage(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                                Edit
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}                          
