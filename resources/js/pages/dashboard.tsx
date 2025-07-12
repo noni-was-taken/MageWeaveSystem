@@ -4,27 +4,33 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
 
 
+type Product = {
+  product_id: number;
+  product_name: string;
+  product_qty: number;
+  product_price: number;
+  old_qty?: number;
+};
+
 type DashboardProps = {
-    products: {
-        product_id: number;
-        product_name: string;
-        product_qty: number;
-        product_price: number;
-    }[];
-    
-    updateLogs: {
-        update_id: number;
-        value_update: number;
-        product_id: number;
-        description: string;
-        update_date: string;
-    }[];
+  products: Product[];
+  updateLogs: {
+    update_id: number;
+    value_update: number;
+    product_id: number;
+    description: string;
+    update_date: string;
+  }[];
 };
 
 
 export default function dashboard() {
     const { products, updateLogs } = usePage<DashboardProps>().props; 
-    
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    const { user } = usePage().props as any;
+console.log("User from Laravel session:", user);
+
     const totalValue = products.reduce((sum, p) => { // total value
         return sum + (Number(p.product_price) * Number(p.product_qty));
         }, 0);
@@ -38,8 +44,41 @@ export default function dashboard() {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [stockData, setStockData] = useState(products);
-
     
+        const handleUpdate = async () => {
+            if (!selectedProduct) return;
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                const response = await fetch(`/products/${selectedProduct.product_id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                body: JSON.stringify({
+                    product_name: selectedProduct.product_name,
+                    product_qty: selectedProduct.product_qty,
+                    product_price: selectedProduct.product_price,
+                    old_qty: selectedProduct.old_qty ?? 0,
+                }),
+            });
+
+                if (response.ok) {
+                alert('Product updated successfully!');
+                window.location.reload(); // or refresh product list without reload
+                } else {
+                const data = await response.json();
+                alert(data.message || 'Update failed.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error occurred while updating.');
+            }
+        };
+
     const [summaryData] = useState({
         weekRange: 'Week of June 30 - July 6',
         date: 'as of June 30, 2025',
@@ -125,8 +164,8 @@ export default function dashboard() {
                                 A
                             </div>
                             <div>
-                                <h1 className='text-lg text-gray-700 font-semibold'>Admin</h1>
-                                <p className='text-sm text-gray-500'>user321</p>
+                                <h1 className='text-lg text-gray-700 font-semibold'>{user.role}</h1>
+                                <p className='text-sm text-gray-500'>{user.name}</p>
                             </div>
                         </div>
                     </div>
@@ -185,7 +224,16 @@ export default function dashboard() {
                                     {filteredStock.map((item) => (
                                         <tr key={item.product_id} className='border-b border-gray-100 hover:bg-gray-50'>
                                             <td className='py-3 px-4'>
-                                                <Edit onClick={()=>setShowEditPage(true)} className='w-4 h-4 text-gray-400 hover:text-black' />
+                                                <Edit 
+                                                    onClick={() => {
+                                                        setSelectedProduct({
+                                                        ...item,
+                                                        old_qty: item.product_qty, //store current qty
+                                                        });
+                                                        setShowEditPage(true);
+                                                    }} 
+                                                    className='w-4 h-4 text-gray-400 hover:text-black' 
+                                                    />
                                             </td>
                                             <td className='py-3 px-4'> {item.product_id}
                                             </td>
@@ -338,7 +386,7 @@ export default function dashboard() {
                             <div>
                                 <h2 className='text-2xl font-bold text-gray-800'>Edit</h2>
                                 <p className='text-gray-600'>Product Name</p>
-                                <p className='text-sm text-gray-500'>Product ID</p>
+                                <p className='text-sm text-gray-500'>ID: {selectedProduct?.product_id}</p>
                             </div>
                             <Edit className='w-8 h-8 text-gray-400' />
                         </div>
@@ -346,26 +394,57 @@ export default function dashboard() {
                         <div className= 'w-full h-3/4 flex flex-col justify-between'>
                             <div className='w-full h-1/4 flex items-center gap-2'>
                                 <h1 className='text-lg font-bold text-gray-800 '>Product Name:</h1>
-                                <p className='text-md text-grey-500'>Old-Product Name</p>
+                                <p className='text-md text-grey-500'>{selectedProduct?.product_name}</p>
                                 <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
                                     <MoveRightIcon className='h-8 w-8'/>
-                                    <input type="text" placeholder='New Product Name' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                    <input
+                                        type="text"
+                                        value={selectedProduct?.product_name ?? ''}
+                                        onChange={(e) =>
+                                            setSelectedProduct((prev) =>
+                                            prev ? { ...prev, product_name: e.target.value } : prev
+                                            )
+                                        }
+                                        placeholder="New Product Name"
+                                        className="w-3/4 px-4 py-2 border border-gray-300 rounded-lg"
+                                        />
                                 </div>
                             </div>
                             <div className='w-full h-1/4 flex items-center gap-2'>
                                 <h1 className='text-lg font-bold text-gray-800 '>Product Quantity:</h1>
-                                <p className='text-md text-grey-500'>618</p>
+                                <p className='text-md text-grey-500'>{selectedProduct?.product_qty}</p>
                                 <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
                                     <MoveRightIcon className='h-8 w-8'/>
-                                    <input type="text" placeholder='New Quantity' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                    <input
+                                        type="number"
+                                        value={selectedProduct?.product_qty ?? ''}
+                                        onChange={(e) =>
+                                            setSelectedProduct((prev: Product | null) =>
+                                            prev ? { ...prev, product_qty: parseInt(e.target.value) || 0 } : prev
+                                            )
+                                        }
+                                        placeholder="New Quantity"
+                                        className="w-3/4 px-4 py-2 border border-gray-300 rounded-lg"
+                                        />
                                 </div>
                             </div>
                             <div className='w-full h-1/4 flex items-center gap-2'>
                                 <h1 className='text-lg font-bold text-gray-800 '>Product Price:</h1>
-                                <p className='text-md text-grey-500'>₱13.73</p>
+                                <p className='text-md text-grey-500'>₱{selectedProduct?Number(selectedProduct.product_price).toFixed(2) : ''}</p>
                                 <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
                                     <MoveRightIcon className='h-8 w-8'/>
-                                    <input type="text" placeholder='New Price' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={selectedProduct?.product_price ?? ''}
+                                        onChange={(e) =>
+                                            setSelectedProduct((prev: Product | null) =>
+                                            prev ? { ...prev, product_price: parseFloat(e.target.value) || 0 } : prev
+                                            )
+                                        }
+                                        placeholder="New Price"
+                                        className="w-3/4 px-4 py-2 border border-gray-300 rounded-lg"
+                                        />
                                 </div>
                             </div>
                         </div>
@@ -374,8 +453,11 @@ export default function dashboard() {
                             <button onClick={() => setShowEditPage(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                                 Close
                             </button>
-                            <button onClick={() => setShowEditPage(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
-                                Edit
+                            <button
+                            onClick={handleUpdate}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6"
+                            >
+                            Edit
                             </button>
                         </div>
                     </div>
