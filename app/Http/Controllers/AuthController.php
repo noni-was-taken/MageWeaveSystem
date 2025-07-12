@@ -34,7 +34,7 @@ class AuthController extends Controller
         // Check password
         if (Hash::check($request->password, $user->password)) {
             Session::put('user_id', $user->user_id);
-            return redirect('/test')->with('success', 'Login successful');
+            return redirect('/dashboard')->with('success', 'Login successful');
         } else {
             return redirect()->back()->withErrors(['password' => 'Incorrect password']);
         }

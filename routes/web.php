@@ -19,13 +19,16 @@ Route::post('/custom-login', [AuthController::class, 'login']);
 // (Optional) Test page
 Route::get('/test', fn() => Inertia::render('Test'));
 
-Route::get('/dashboard', function () {
-    $products = DB::select('SELECT * FROM products');
-    $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
-    return Inertia::render('dashboard', [
-        'products' => $products,
-        'updateLogs' => $logs,
-    ]);
+Route::middleware(['auth.session'])->group(function () {
+    Route::get('/dashboard', function () {
+        //dd(Session::get('user_id')); 
+        $products = DB::select('SELECT * FROM products');
+        $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
+        return Inertia::render('dashboard', [
+            'products' => $products,
+            'updateLogs' => $logs,
+        ]);
+    });
 });
 
 require __DIR__.'/settings.php';
