@@ -27,7 +27,11 @@ type DashboardProps = {
 
 export default function dashboard() {
     const { products, updateLogs } = usePage<DashboardProps>().props; 
-    const [selectedProduct, setselectedProduct] = useState<Product | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    const [newProductName, setNewProductName] = useState('');
+    const [newProductQty, setNewProductQty] = useState('');
+    const [newProductPrice, setNewProductPrice] = useState('');
 
     const { user } = usePage().props as any;
 console.log("User from Laravel session:", user);
@@ -70,6 +74,7 @@ console.log("User from Laravel session:", user);
 
                 if (response.ok) {
                 alert('Product updated successfully!');
+                setShowEditPage(false);
                 window.location.reload(); // or refresh product list without reload
                 } else {
                 const data = await response.json();
@@ -90,7 +95,7 @@ console.log("User from Laravel session:", user);
         item: { product_id: number; product_name: string; product_qty: number; product_price: number }
     ) => {
         setActionType(type);
-        setselectedProduct({
+        setSelectedProduct({
             product_id: item.product_id,
             product_name: item.product_name,
             product_qty: item.product_qty,
@@ -99,6 +104,153 @@ console.log("User from Laravel session:", user);
         });
         setShowQtyPopup(true);
     };
+
+        const handleDelete = async () => {
+        if (!selectedProduct) return;
+
+        const confirmDelete = confirm(`Are you sure you want to delete ${selectedProduct.product_name}?`);
+        if (!confirmDelete) return;
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch(`/products/${selectedProduct.product_id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+            });
+
+            if (response.ok) {
+                alert('Product deleted!');
+                setShowEditPage(false); // close modal
+                window.location.reload(); // reload page
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Delete failed.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error occurred while deleting.');
+        }
+    };
+
+    const handleRestock = async () => {
+    if (!selectedProduct || !quantityInput) return;
+
+    const qty = parseInt(quantityInput);
+    if (isNaN(qty) || qty <= 0) {
+        alert('Enter a valid quantity.');
+        return;
+    }
+
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch(`/products/${selectedProduct.product_id}/restock`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                body: JSON.stringify({ quantity: qty }),
+            });
+
+            if (response.ok) {
+                alert('Product restocked successfully!');
+                setShowQtyPopup(false);
+                setQuantityInput('');
+                window.location.reload(); // Optional: update state instead
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Restock failed.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error occurred while restocking.');
+        }
+    };
+
+        const handleSale = async () => {
+        if (!selectedProduct || !quantityInput) return;
+
+        const qty = parseInt(quantityInput);
+        if (isNaN(qty) || qty <= 0) {
+            alert('Enter a valid quantity.');
+            return;
+        }
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch(`/products/${selectedProduct.product_id}/sale`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                body: JSON.stringify({ quantity: qty }),
+            });
+
+            if (response.ok) {
+                alert('Sale recorded!');
+                setShowQtyPopup(false);
+                setQuantityInput('');
+                window.location.reload(); // Or update state
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Sale failed.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error occurred during sale.');
+        }
+    };
+
+            const handleAddProduct = async () => {
+        if (!newProductName || !newProductPrice) {
+            alert('Please enter both name and price');
+            return;
+        }
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            const response = await fetch('/products', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken || '',
+            },
+            body: JSON.stringify({
+                product_name: newProductName,
+                product_qty: 0, // 👈 default value
+                product_price: parseFloat(newProductPrice),
+            }),
+            });
+
+            if (response.ok) {
+            alert('Product added successfully!');
+            setNewProductName('');
+            setNewProductPrice('');
+            setShowEditTable(false); // close modal
+            window.location.reload(); // or update local state
+            } else {
+            const data = await response.json();
+            alert(data.message || 'Failed to add product.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong.');
+        }
+        };
+
+
 
     const handleSubmitQty = () => {
         const qty = parseInt(quantityInput);
@@ -112,7 +264,7 @@ console.log("User from Laravel session:", user);
         // reset state
         setShowQtyPopup(false);
         setQuantityInput('');
-        setselectedProduct(null);
+        setSelectedProduct(null);
         setActionType(null);
     };
 
@@ -265,7 +417,7 @@ console.log("User from Laravel session:", user);
                                             <td className='py-3 px-4'>
                                                 <Edit 
                                                     onClick={() => {
-                                                        setselectedProduct({
+                                                        setSelectedProduct({
                                                         ...item,
                                                         old_qty: item.product_qty, //store current qty
                                                         });
@@ -456,7 +608,7 @@ console.log("User from Laravel session:", user);
                                         type="text"
                                         value={selectedProduct?.product_name ?? ''}
                                         onChange={(e) =>
-                                            setselectedProduct((prev) =>
+                                            setSelectedProduct((prev) =>
                                             prev ? { ...prev, product_name: e.target.value } : prev
                                             )
                                         }
@@ -474,7 +626,7 @@ console.log("User from Laravel session:", user);
                                         type="number"
                                         value={selectedProduct?.product_qty ?? ''}
                                         onChange={(e) =>
-                                            setselectedProduct((prev: Product | null) =>
+                                            setSelectedProduct((prev: Product | null) =>
                                             prev ? { ...prev, product_qty: parseInt(e.target.value) || 0 } : prev
                                             )
                                         }
@@ -493,7 +645,7 @@ console.log("User from Laravel session:", user);
                                         step="0.01"
                                         value={selectedProduct?.product_price ?? ''}
                                         onChange={(e) =>
-                                            setselectedProduct((prev: Product | null) =>
+                                            setSelectedProduct((prev: Product | null) =>
                                             prev ? { ...prev, product_price: parseFloat(e.target.value) || 0 } : prev
                                             )
                                         }
@@ -505,16 +657,19 @@ console.log("User from Laravel session:", user);
                         </div>
 
                         <div className='flex justify-between w-full'>
-                            <button className='bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                            <button onClick={handleDelete} className='bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                                     Delete  
                                 </button>
                             <div className='flex space-x-2 w-1/2 items-end justify-end'>
                                 <button onClick={() => setShowEditPage(false)} className='bg-blue-600  text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-2/6'>
                                     Close
                                 </button>    
-                                <button onClick={() => setShowEditPage(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-green-700 transition-colors duration-200 w-2/6'>
+                                    <button
+                                    onClick={handleUpdate}
+                                    className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-green-700 transition-colors duration-200 w-2/6'
+                                    >
                                     Edit
-                                </button>    
+                                    </button>
                             </div>
                         </div>
                     </div>
@@ -536,14 +691,27 @@ console.log("User from Laravel session:", user);
                                 <h1 className='text-lg font-bold text-gray-800 '>Product Name:</h1>
                                 <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
                                     <MoveRightIcon className='h-8 w-8'/>
-                                    <input type="text" placeholder='New Product Name' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                    <input
+                                    type="text"
+                                    value={newProductName}
+                                    onChange={(e) => setNewProductName(e.target.value)}
+                                    placeholder="New Product Name"
+                                    className="w-3/4 px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
                                 </div>
                             </div>
                             <div className='w-full h-1/4 flex items-center gap-2'>
                                 <h1 className='text-lg font-bold text-gray-800 '>Product Price:</h1>
                                 <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
                                     <MoveRightIcon className='h-8 w-8'/>
-                                    <input type="text" placeholder='New Quantity' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                    <input
+                                    type="number"
+                                    step="0.01"
+                                    value={newProductPrice}
+                                    onChange={(e) => setNewProductPrice(e.target.value)}
+                                    placeholder="New Price"
+                                    className="w-3/4 px-4 py-2 border border-gray-300 rounded-lg"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -551,14 +719,12 @@ console.log("User from Laravel session:", user);
                             <button onClick={() => setShowEditTable(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                                 Close
                             </button>
+
                             <button
-                            onClick={handleUpdate}
+                            onClick={handleAddProduct}
                             className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6"
-                            > 
-                            Edit
-                            </button>
-                            <button onClick={() => setShowEditTable(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
-                                Add
+                            >
+                            Add
                             </button>
                         </div>
                     </div>
@@ -589,7 +755,7 @@ console.log("User from Laravel session:", user);
                                 Cancel
                             </button>
                             <button
-                                onClick={handleSubmitQty}
+                                onClick={actionType === 'sale' ? handleSale : handleRestock}
                                 className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
                             >
                                 Submit

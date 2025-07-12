@@ -21,12 +21,12 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        DB::insert("INSERT INTO products (product_id, product_name, product_qty, product_price) VALUES (?, ?, ?, ?)", [
-            $request->product_id,
+        DB::insert("INSERT INTO products (product_name, product_qty, product_price) VALUES (?, ?, ?)", [
             $request->product_name,
             $request->product_qty,
             $request->product_price
         ]);
+
         return response()->json(['message' => 'Product created']);
     }
 

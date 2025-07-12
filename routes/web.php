@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -25,6 +25,72 @@ Route::get('/logout', function () {
 });
 
 Route::middleware(['auth.session'])->group(function () {
+        Route::post('/products', [ProductController::class, 'store'])->name('products');
+
+        Route::post('/products/{id}/restock', function (Illuminate\Http\Request $request, $id) {
+        $qty = (int) $request->input('quantity');
+
+        if ($qty <= 0) {
+            return response()->json(['message' => 'Invalid quantity'], 400);
+        }
+
+        $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $currentQty = $product[0]->product_qty;
+        $newQty = $currentQty + $qty;
+
+        // Update product
+        DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
+
+        // Insert into updateinfo
+        DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+            $qty, // Positive = restock
+            $id,
+            'Restocked'
+        ]);
+
+        return response()->json(['message' => 'Restock recorded']);
+    });
+
+        Route::post('/products/{id}/sale', function (Illuminate\Http\Request $request, $id) {
+        $qty = (int) $request->input('quantity');
+        $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $currentQty = $product[0]->product_qty;
+
+        if ($qty > $currentQty) {
+            return response()->json(['message' => 'Not enough stock'], 400);
+        }
+
+        $newQty = $currentQty - $qty;
+
+        // 1. Update product
+        DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
+
+        // 2. Insert log
+        DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+            -$qty, // Negative value = sale
+            $id,
+            'Sale'
+        ]);
+
+        return response()->json(['message' => 'Sale recorded']);
+    });
+
+        Route::delete('/products/{id}', function ($id) {
+        DB::delete("DELETE FROM products WHERE product_id = ?", [$id]);
+        //DB::delete("DELETE FROM updateinfo WHERE product_id = ?", [$id]); // optional: delete logs
+        return response()->json(['message' => 'Product deleted']);
+    });
+
         Route::put('/products/{id}', function ($id, Request $request) {
         $request->validate([
             'product_name' => 'required|string|max:100',
