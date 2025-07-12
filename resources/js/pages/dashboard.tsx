@@ -35,7 +35,7 @@ export default function dashboard() {
     
     const [showWeeklySummary, setShowWeeklySummary] = useState(false);
     const [showEditPage, setShowEditPage] = useState(false);
-    const [showEditTable, setShowEditTable] = useState(true);
+    const [showEditTable, setShowEditTable] = useState(false);
     
     const [searchTerm, setSearchTerm] = useState('');   
     const [stockData, setStockData] = useState(products);
