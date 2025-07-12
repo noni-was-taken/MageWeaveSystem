@@ -1,7 +1,7 @@
 import React, {use, useState} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
+import { Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
 
 
 type DashboardProps = {
@@ -35,11 +35,48 @@ export default function dashboard() {
     
     const [showWeeklySummary, setShowWeeklySummary] = useState(false);
     const [showEditPage, setShowEditPage] = useState(false);
+    const [showEditTable, setShowEditTable] = useState(true);
     
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');   
     const [stockData, setStockData] = useState(products);
+    const [actionType, setActionType] = useState<'sale' | 'restock' | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<null | {
+        product_id: number;
+        product_name: string;
+        current_qty: number;
+    }>(null);
+    const [quantityInput, setQuantityInput] = useState('');
+    const [showQtyPopup, setShowQtyPopup] = useState(false);
 
-    
+    const handleActionClick = (
+        type: 'sale' | 'restock',
+        item: { product_id: number; product_name: string; product_qty: number; product_price: number }
+    ) => {
+        setActionType(type);
+        setSelectedProduct({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            current_qty: item.product_qty,
+        });
+        setShowQtyPopup(true);
+    };
+
+    const handleSubmitQty = () => {
+        const qty = parseInt(quantityInput);
+        if (isNaN(qty) || qty <= 0) {
+            alert('Enter a valid quantity.');
+            return;
+        }
+
+        console.log(`${actionType?.toUpperCase()} ${qty} units of ${selectedProduct?.product_name}`);
+        
+        // reset state
+        setShowQtyPopup(false);
+        setQuantityInput('');
+        setSelectedProduct(null);
+        setActionType(null);
+    };
+
     const [summaryData] = useState({
         weekRange: 'Week of June 30 - July 6',
         date: 'as of June 30, 2025',
@@ -105,14 +142,8 @@ export default function dashboard() {
                         <h1 className='text-3xl font'>|MageWeave Logo|</h1>
                         <h1 className='text-md '>Cozy Textiles</h1>
                     </div>
-                    {/* search bar */}
-                    <div className='flex ml-8 w-2/5 items-center h-full'> 
-                        <input type="search" name="item-search" id="item" 
-                        placeholder="Search..." 
-                        className="w-full px-8 py-2 text-lg rounded-xl text-gray-700 border border-gray-200 shadow-xl h-1/2"/>
-                    </div>
                     {/* current date */}
-                    <div className='w-1/6 h-full flex items-center justify-center '>
+                    <div className='w-1/6 ml-auto h-full flex items-center justify-center '>
                         <div className='text-center'>
                             <h1 className='text-xl text-gray-700 font-semibold'>July 11, 2025</h1>
                             <p className='text-sm text-gray-500'>Friday</p>
@@ -169,7 +200,14 @@ export default function dashboard() {
                 <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 px-4'>
                     {/* Live Stock Overview */}
                     <div className='lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-gray-200'>
-                        <h2 className='text-xl font-bold text-gray-800 mb-6'> Live Stock Overview </h2>
+                        <div className='w-full h-auto flex justify-between'>
+                            <h2 className='text-xl font-bold text-gray-800 mb-6'> Live Stock Overview </h2>
+                            <div onClick={() => setShowEditTable(true)} className='flex items-center space-x-2 bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200 hover:shadow-md transition-shadow duration-200'>
+                                <h1 className='text-md'>Add Item</h1>
+                                <Plus className='w-4 h-4 text-gray-500 hover:text-black' />
+                            </div>
+                        </div>
+                            
                         <div className='space-y-4 h-96 overflow-x-auto overflow-y-auto'>
                             <table className='min-w-full divide-gray-200'>
                                 <thead>
@@ -179,6 +217,7 @@ export default function dashboard() {
                                         <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Item Name</th>
                                         <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Quantity</th>
                                         <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Price</th>
+                                        <th className='text-left py-3 px-4 text-gray-600 font-semibold'>Sale/Restock</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -200,6 +239,22 @@ export default function dashboard() {
                                                 </span>
                                             </td>
                                             <td className='py-3 px-4 text-gray-700'>₱{Number(item.product_price).toFixed(2)}</td>
+                                            <td>
+                                                <div className='flex items-center space-x-2'>
+                                                    <button
+                                                        onClick={() => handleActionClick('sale', item)}
+                                                        className='bg-yellow-600 text-white px-3 py-1 rounded-lg hover:bg-yellow-700 transition-colors duration-200'
+                                                    >
+                                                        Sale
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleActionClick('restock', item)}
+                                                        className='bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors duration-200'
+                                                    >
+                                                        Restock
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -370,17 +425,94 @@ export default function dashboard() {
                             </div>
                         </div>
 
+                        <div className='flex justify-between w-full'>
+                            <button className='bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                                    Delete  
+                                </button>
+                            <div className='flex space-x-2 w-1/2 items-end justify-end'>
+                                <button onClick={() => setShowEditPage(false)} className='bg-blue-600  text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-2/6'>
+                                    Close
+                                </button>    
+                                <button onClick={() => setShowEditPage(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-green-700 transition-colors duration-200 w-2/6'>
+                                    Edit
+                                </button>    
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showEditTable && (
+                <div className='fixed inset-0 flex items-center bg-black/40 justify-center z-50 backdrop-blur-sm'>
+                    <div className='bg-white flex flex-col rounded-xl shadow-lg w-2/5 h-1/2 overflow-auto m-18 p-8 border border-gray-200'>
+                        <div className='flex items-center justify-between mb-6'>
+                            <div>
+                                <h2 className='text-2xl font-bold text-gray-800'>Add Product</h2>
+                            </div>
+                            <Edit className='w-8 h-8 text-gray-400' />
+                        </div>
+
+                        <div className= 'w-full h-3/4 flex flex-col justify-around'>
+                            <div className='w-full h-1/4 flex items-center gap-2'>
+                                <h1 className='text-lg font-bold text-gray-800 '>Product Name:</h1>
+                                <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
+                                    <MoveRightIcon className='h-8 w-8'/>
+                                    <input type="text" placeholder='New Product Name' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                </div>
+                            </div>
+                            <div className='w-full h-1/4 flex items-center gap-2'>
+                                <h1 className='text-lg font-bold text-gray-800 '>Product Price:</h1>
+                                <div className='ml-auto w-1/2 flex items-center gap-2 justify-end pr-4'>
+                                    <MoveRightIcon className='h-8 w-8'/>
+                                    <input type="text" placeholder='New Quantity' className='w-3/4 px-4 py-2 border border-gray-300 rounded-lg'/>
+                                </div>
+                            </div>
+                        </div>
                         <div className='flex justify-between'>
-                            <button onClick={() => setShowEditPage(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                            <button onClick={() => setShowEditTable(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                                 Close
                             </button>
-                            <button onClick={() => setShowEditPage(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
-                                Edit
+                            <button onClick={() => setShowEditTable(false)} className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                                Add
                             </button>
                         </div>
                     </div>
                 </div>
-            )}                          
+            )}
+            {/* sale restock popup */}
+            {showQtyPopup && selectedProduct && (
+                <div className='fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center'>
+                    <div className='bg-white p-6 rounded-xl shadow-lg w-96'>
+                        <h2 className='text-xl font-bold text-gray-800 mb-4'>
+                            {actionType === 'sale' ? 'Record Sale' : 'Restock Product'}
+                        </h2>
+                        <p className='text-sm mb-2 text-gray-600'>
+                            {selectedProduct.product_name} — Current Stock: {selectedProduct.current_qty}
+                        </p>
+                        <input
+                            type='number'
+                            className='w-full p-2 border border-gray-300 rounded-md mb-4'
+                            placeholder='Enter quantity...'
+                            value={quantityInput}
+                            onChange={(e) => setQuantityInput(e.target.value)}
+                        />
+                        <div className='flex justify-between'>
+                            <button
+                                onClick={() => setShowQtyPopup(false)}
+                                className='px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400'
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitQty}
+                                className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }
