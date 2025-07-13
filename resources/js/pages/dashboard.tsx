@@ -22,11 +22,31 @@ type DashboardProps = {
     description: string;
     update_date: string;
   }[];
+  summaryData: {
+    weekRange: string;
+    date: string;
+    topSales: {
+      product_id: number;
+      product_name: string;
+      total_sold_qty: number;
+      total_sales: number;
+    }[];
+    leastSold: {
+      product_id: number;
+      product_name: string;
+      total_sold_qty: number;
+      total_sales: number;
+    }[];
+    totalOrders: {
+      totalStocksOrdered: number;
+      totalSalesRevenue: number;
+    };
+  };
 };
 
 
 export default function dashboard() {
-    const { products, updateLogs } = usePage<DashboardProps>().props; 
+    const { products, updateLogs, summaryData } = usePage<DashboardProps>().props; 
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const [newProductName, setNewProductName] = useState('');
@@ -267,31 +287,6 @@ export default function dashboard() {
         setSelectedProduct(null);
         setActionType(null);
     };
-
-    const [summaryData] = useState({
-        weekRange: 'Week of June 30 - July 6',
-        date: 'as of June 30, 2025',
-        topSales: [
-            { name: 'Item 1', sales: 173 },
-            { name: 'Item 5', sales: 156 },
-            { name: 'Item 4', sales: 142 }
-        ],
-        leastSold: [
-            { name: 'Item 6', sales: 12 },
-            { name: 'Item 2', sales: 28 },
-            { name: 'Item 3', sales: 35 }
-        ],
-        highestSellingItem: {
-            name: 'Item 1',
-            stocksSold: 173
-        },
-        totalOrders: {
-            ordered: 17,
-            shipped: 5,
-            totalStocksOrdered: 1390,
-            totalStocksSold: 736
-        }
-    });
 
     const filteredStock = stockData.filter(item =>
         item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -541,10 +536,12 @@ export default function dashboard() {
                                 <div className='space-y-2'>
                                     {summaryData.topSales.map((item, index) => (
                                         <div key={index} className='flex justify-between items-center'>
-                                            <span className='text-sm text-gray-700'>• {item.name}</span>
-                                            <span className='text-sm font-medium text-gray-800'>{item.sales}</span>
+                                            <span className='text-sm text-gray-700'>• {item.product_name}</span>
+                                            <span className='text-sm font-medium text-gray-800'>
+                                            {item.total_sold_qty} sold • ₱{item.total_sales.toFixed(2)}
+                                            </span>
                                         </div>
-                                    ))}
+                                        ))}
                                 </div>
                             </div>
 
@@ -556,10 +553,12 @@ export default function dashboard() {
                                 </h3>
                                 <div className='space-y-2'>
                                     {summaryData.leastSold.map((item, index) => (
-                                        <div key={index} className='flex justify-between items-center'>
-                                            <span className='text-sm text-gray-700'>• {item.name}</span>
-                                            <span className='text-sm font-medium text-gray-800'>{item.sales}</span>
-                                        </div>
+                                    <div key={index} className='flex justify-between items-center'>
+                                        <span className='text-sm text-gray-700'>• {item.product_name}</span>
+                                        <span className='text-sm font-medium text-gray-800'>
+                                        {item.total_sold_qty} sold • ₱{item.total_sales.toFixed(2)}
+                                        </span>
+                                    </div>
                                     ))}
                                 </div>
                             </div>
@@ -572,14 +571,12 @@ export default function dashboard() {
                                 </h3>
                                 <div className='space-y-2'>
                                     <div className='flex justify-between'>
-                                        <span className='text-sm text-gray-700'>• {summaryData.totalOrders.ordered} ordered shipments</span>
+                                        <span className='text-sm text-gray-700'>• Total Quantity Sold</span>
+                                        <span className='text-sm font-medium text-gray-800'>{summaryData.totalOrders.totalStocksOrdered}</span>
                                     </div>
                                     <div className='flex justify-between'>
-                                        <span className='text-sm text-gray-700'>• {summaryData.totalOrders.shipped} ordered shipments</span>
-                                    </div>
-                                    <div className='text-xs text-gray-600 mt-2'>
-                                        <p>{summaryData.totalOrders.totalStocksOrdered} total stocks ordered</p>
-                                        <p>{summaryData.totalOrders.totalStocksSold} total stocks sold</p>
+                                        <span className='text-sm text-gray-700'>• Total Sales Revenue</span>
+                                        <span className='text-sm font-medium text-gray-800'>₱{summaryData.totalOrders.totalSalesRevenue.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
