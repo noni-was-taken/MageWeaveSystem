@@ -13,7 +13,7 @@ class AuthenticateSession
     {
         
         if (!Session::has('user_id')) {
-            return redirect('/logins');
+            return redirect('/login');
         }
 
         return $next($request);

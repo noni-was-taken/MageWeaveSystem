@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 
-const Logins: React.FC = () => {
+const login: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -67,4 +67,4 @@ const Logins: React.FC = () => {
   );
 };
 
-export default Logins;
+export default login;
