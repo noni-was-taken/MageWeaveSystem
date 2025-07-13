@@ -34,7 +34,7 @@ export default function dashboard() {
     const [newProductPrice, setNewProductPrice] = useState('');
 
     const { user } = usePage().props as any;
-console.log("User from Laravel session:", user);
+    const isAdmin = user?.role === 'Admin';
 
     const totalValue = products.reduce((sum, p) => { // total value
         return sum + (Number(p.product_price) * Number(p.product_qty));
@@ -393,10 +393,12 @@ console.log("User from Laravel session:", user);
                     <div className='lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-gray-200'>
                         <div className='w-full h-auto flex justify-between'>
                             <h2 className='text-xl font-bold text-gray-800 mb-6'> Live Stock Overview </h2>
-                            <div onClick={() => setShowEditTable(true)} className='flex items-center space-x-2 bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200 hover:shadow-md transition-shadow duration-200'>
-                                <h1 className='text-md'>Add Item</h1>
-                                <Plus className='w-4 h-4 text-gray-500 hover:text-black' />
-                            </div>
+                            {isAdmin && (
+                                <div onClick={() => setShowEditTable(true)} className='flex items-center space-x-2 bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200 hover:shadow-md transition-shadow duration-200'>
+                                    <h1 className='text-md'>Add Item</h1>
+                                    <Plus className='w-4 h-4 text-gray-500 hover:text-black' />
+                                </div>
+                            )}
                         </div>
                             
                         <div className='space-y-4 h-96 overflow-x-auto overflow-y-auto'>
@@ -415,16 +417,19 @@ console.log("User from Laravel session:", user);
                                     {filteredStock.map((item) => (
                                         <tr key={item.product_id} className='border-b border-gray-100 hover:bg-gray-50'>
                                             <td className='py-3 px-4'>
-                                                <Edit 
-                                                    onClick={() => {
-                                                        setSelectedProduct({
-                                                        ...item,
-                                                        old_qty: item.product_qty, //store current qty
-                                                        });
-                                                        setShowEditPage(true);
-                                                    }} 
-                                                    className='w-4 h-4 text-gray-400 hover:text-black' 
-                                                    />
+
+                                                {isAdmin && (
+                                                    <Edit 
+                                                        onClick={() => {
+                                                            setSelectedProduct({
+                                                            ...item,
+                                                            old_qty: item.product_qty, //store current qty
+                                                            });
+                                                            setShowEditPage(true);
+                                                        }} 
+                                                        className='w-4 h-4 text-gray-400 hover:text-black' 
+                                                        />
+                                                )}
                                             </td>
                                             <td className='py-3 px-4'> {item.product_id}
                                             </td>
