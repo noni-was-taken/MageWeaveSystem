@@ -20,7 +20,7 @@ return new class extends Migration
         $table->timestamps();
 
         // Optional: foreign key constraint if you want
-        $table->foreign('product_id')->references('product_id')->on('products')->onDelete('cascade');
+        //$table->foreign('product_id')->references('product_id')->on('products')->onDelete('cascade');
         });
     }
 
