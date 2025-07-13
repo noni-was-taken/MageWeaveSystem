@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-
+use Carbon\Carbon;
 
 // Show the login page (Inertia/React)
 Route::get('/', fn() => Inertia::render('login'));
@@ -121,13 +121,70 @@ Route::middleware(['auth.session'])->group(function () {
         //dd(Session::get('user_id')); 
         $products = DB::select('SELECT * FROM products');
         $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
+
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
+
+        $weeklyLogs = DB::select("
+            SELECT 
+                p.product_name,
+                ui.product_id,
+                ui.value_update,
+                p.product_price,
+                ui.description,
+                ui.update_date
+            FROM updateinfo ui
+            JOIN products p ON ui.product_id = p.product_id
+            WHERE ui.update_date BETWEEN ? AND ?
+        ", [$startOfWeek, $endOfWeek]);
+
+        $salesMap = [];
+        $totalOrderedQty = 0;
+        $totalSalesRevenue = 0;
+
+        foreach ($weeklyLogs as $log) {
+            $pid = $log->product_id;
+            $value = (int) $log->value_update;
+            $name = $log->product_name;
+            $price = (float) $log->product_price;
+
+            if (!isset($salesMap[$pid])) {
+                $salesMap[$pid] = [
+                    'product_id' => $pid,
+                    'product_name' => $name,
+                    'total_sold_qty' => 0,
+                    'total_sales' => 0,
+                ];
+            }
+
+            if ($value < 0) {
+                $salesMap[$pid]['total_sold_qty'] += abs($value);
+                $salesMap[$pid]['total_sales'] += abs($value) * $price;
+                $totalOrderedQty += abs($value);
+                $totalSalesRevenue += abs($value) * $price;
+            }
+        }
+
+        $topSales = collect($salesMap)->sortByDesc('total_sales')->take(3)->values()->all();
+        $leastSold = collect($salesMap)->sortBy('total_sold_qty')->take(3)->values()->all();
+
         return Inertia::render('dashboard', [
             'products' => $products,
             'updateLogs' => $logs,
             'user' => [
                 'name' => Session::get('user_name'),
                 'role' => Session::get('user_role'),
-            ],       
+            ],
+            'summaryData' => [
+                'weekRange' => 'Week of ' . $startOfWeek->format('F j') . ' - ' . $endOfWeek->format('F j'),
+                'date' => 'as of ' . now()->format('F j, Y'),
+                'topSales' => $topSales,
+                'leastSold' => $leastSold,
+                'totalOrders' => [
+                    'totalStocksOrdered' => $totalOrderedQty,
+                    'totalSalesRevenue' => $totalSalesRevenue,
+                ]
+            ]
         ]);
     });
 });
