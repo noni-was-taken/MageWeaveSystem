@@ -25,8 +25,8 @@ const login: React.FC = () => {
 
   return (
     <div className='flex flex-col gap-7 items-center justify-center h-screen w-full bg-white'>
-      <div className='h-1/12 w-1/6 items-center justify-center flex'>
-        <h1 className='text-3xl font-bold text-center'>|MageWeave Logo|</h1>
+      <div className='h-4/12 w-1/6 items-center justify-center flex -mt-56 -mb-16'>
+        <img src="/MageWeave_Logo.png" alt="MageWeave Logo" className='max-h-full object-contain'/>
       </div>
       <div className='border border-gray-300 h-auto w-1/3 p-8 rounded-lg shadow-lg'>
         <h2 className='font-bold text-2xl'>Login</h2>
