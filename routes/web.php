@@ -10,16 +10,16 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 
 // Show the login page (Inertia/React)
-Route::get('/', fn() => Inertia::render('logins'));
-Route::get('/login', fn() => Inertia::render('logins'));
+Route::get('/', fn() => Inertia::render('login'));
+Route::get('/login', fn() => Inertia::render('login'));
 
 // Handle login POST from React/Inertia
 Route::post('/custom-login', [AuthController::class, 'login']);
 
-Route::get('/logout', function () {
-    Session::flush(); // clear all session data
-    return redirect('/login')->with('success', 'Logged out successfully');
-});
+Route::post('/logout', function () {
+    Session::flush(); // Clear all session data
+    return Inertia::location('/login');
+})->name('logout');
 
 Route::middleware(['auth.session'])->group(function () {
         Route::post('/products', [ProductController::class, 'store'])->name('products');
@@ -189,5 +189,10 @@ Route::middleware(['auth.session'])->group(function () {
     });
 });
 
+Route::fallback(function () {
+    if (!Session::has('user_id')) {
+        return Inertia::location('/login');
+    }
+});
+
 require __DIR__.'/settings.php';
-//require __DIR__.'/auth.php';

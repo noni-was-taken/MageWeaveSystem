@@ -1,7 +1,9 @@
-import React, {use, useState} from 'react';
+import React, {use, useState, useEffect} from 'react';
 import { type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router} from '@inertiajs/react';
 import { Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
+
+
 
 
 type Product = {
@@ -47,6 +49,25 @@ type DashboardProps = {
 
 export default function dashboard() {
     const { products, updateLogs, summaryData } = usePage<DashboardProps>().props; 
+    const [currentDate, setCurrentDate] = useState('');
+    const [dayOfWeek, setDayOfWeek] = useState('');
+
+    useEffect(() => {
+        const now = new Date();
+
+        const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+        };
+        const formattedDate = now.toLocaleDateString('en-US', options);
+
+        const day = now.toLocaleDateString('en-US', { weekday: 'long' });
+
+        setCurrentDate(formattedDate);
+        setDayOfWeek(day);
+    }, []);
+    
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const [newProductName, setNewProductName] = useState('');
@@ -325,25 +346,37 @@ export default function dashboard() {
                 <div className='w-full h-28 p-2.5 flex items-center shadow-lg bg-white'>
                     {/* logo */}
                     <div className='flex flex-col justify-center w-1/6 h-full items-center space-x-2 '>
-                        <img src="/MageWeave_Logo.png" alt="MageWeave Logo" className='w-full h-3/4 object-contain' />
-                        <h1 className='text-md '>Cozy Textiles</h1>
+                        <img src="/MageWeave_Logo.png" alt="MageWeave Logo" className='h-27 object-contain' />
                     </div>
                     {/* current date */}
                     <div className='w-1/6 ml-auto h-full flex items-center justify-center '>
                         <div className='text-center'>
-                            <h1 className='text-xl text-gray-700 font-semibold'>July 11, 2025</h1>
-                            <p className='text-sm text-gray-500'>Friday</p>
+                            <h1 className='text-xl text-gray-700 font-semibold'>{currentDate}</h1>
+                            <p className='text-sm text-gray-500'>{dayOfWeek}</p>
                         </div>
                     </div>
                     {/* user profile */}
                     <div className='ml-auto w-2/12 h-full flex justify-center items-center'>
                         <div className='flex items-center space-x-3'>
-                            <div className='w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold'>
+                            {isAdmin ? (
+                                <div className='w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold'>
                                 A
-                            </div>
+                                </div>
+                            ) : (
+                                <div className='w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold'>
+                                U </div>   
+                            )}
                             <div>
                                 <h1 className='text-lg text-gray-700 font-semibold'>{user.role}</h1>
                                 <p className='text-sm text-gray-500'>{user.name}</p>
+                            </div>
+                            <div className='ml-8'>
+                                <Link
+                                    href="/logout"
+                                    method="post"
+                                    as="button" className='text-red-600 hover:text-red-800 transition-colors underline duration-200 hover:underline-offset-2 cursor-pointer'>
+                                    Logout
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -389,7 +422,7 @@ export default function dashboard() {
                         <div className='w-full h-auto flex justify-between'>
                             <h2 className='text-xl font-bold text-gray-800 mb-6'> Live Stock Overview </h2>
                             {isAdmin && (
-                                <div onClick={() => setShowEditTable(true)} className='flex items-center space-x-2 bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200 hover:shadow-md transition-shadow duration-200'>
+                                <div onClick={() => setShowEditTable(true)} className='flex cursor-pointer items-center space-x-2 bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200 hover:shadow-md transition-shadow duration-200'>
                                     <h1 className='text-md'>Add Item</h1>
                                     <Plus className='w-4 h-4 text-gray-500 hover:text-black' />
                                 </div>
@@ -422,7 +455,7 @@ export default function dashboard() {
                                                             });
                                                             setShowEditPage(true);
                                                         }} 
-                                                        className='w-4 h-4 text-gray-400 hover:text-black' 
+                                                        className='w-4 h-4 text-gray-400 cursor-pointer hover:text-black' 
                                                         />
                                                 )}
                                             </td>
@@ -474,7 +507,7 @@ export default function dashboard() {
                                             {log.value_update}
                                         </div>
                                         <div>
-                                            <p className='text-sm font-medium text-gray-800'>Form {log.product_id}</p>
+                                            <p className='text-sm font-medium text-gray-800'>Item {log.product_id}</p>
                                             <p className='text-xs text-gray-600'>{log.description}</p>
                                         </div>
                                     </div>
