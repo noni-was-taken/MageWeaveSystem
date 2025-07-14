@@ -1,7 +1,7 @@
 import React, {use, useState, useEffect} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage, router} from '@inertiajs/react';
-import { Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
+import { Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, CircleAlert, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
 
 
 
@@ -130,6 +130,7 @@ export default function dashboard() {
     const [actionType, setActionType] = useState<'sale' | 'restock' | null>(null);
     const [quantityInput, setQuantityInput] = useState('');
     const [showQtyPopup, setShowQtyPopup] = useState(false);
+    const [showHistoricalSummary, setShowHistoricalSummary] = useState(true);
 
     const handleActionClick = (
         type: 'sale' | 'restock',
@@ -299,6 +300,7 @@ export default function dashboard() {
             alert('Enter a valid quantity.');
             return;
         }
+        
 
         console.log(`${actionType?.toUpperCase()} ${qty} units of ${selectedProduct?.product_name}`);
         
@@ -351,7 +353,7 @@ export default function dashboard() {
                     {/* current date */}
                     <div className='w-1/6 ml-auto h-full flex items-center justify-center '>
                         <div className='text-center'>
-                            <h1 className='text-xl text-gray-700 font-semibold'>{currentDate}</h1>
+                            <h1 className='text-xl text-gray-700 font-bold'>{currentDate}</h1>
                             <p className='text-sm text-gray-500'>{dayOfWeek}</p>
                         </div>
                     </div>
@@ -530,7 +532,7 @@ export default function dashboard() {
                         {getLowStockAlerts().map((alert, index) => (
                             <div key={index} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
                                 <div className='flex items-center space-x-3'>
-                                    <ClockAlertIcon className={`w-6 h-6 ${
+                                    <CircleAlert className={`w-6 h-6 ${
                                         alert.level === 'critical' ? 'text-red-950' :
                                         alert.level === 'warning' ? 'text-red-500' :
                                         'text-yellow-500'
@@ -540,7 +542,13 @@ export default function dashboard() {
                                         <p className='text-xs text-gray-600'>{alert.message}</p>
                                     </div>
                                 </div>
-                                <span className='text-sm text-gray-500'>Now</span>
+                                <div className='flex items-center text-gray-500 space-x-2'>
+                                    <ClockAlertIcon className='h-7 w-7 text-red-500'></ClockAlertIcon>
+                                    <div className='flex flex-col items-center justify-between h-max'>
+                                        <span className='text-sm text-red-500 font-bold'>2 Days ago</span>
+                                        <span className='text-xs text-black'>July 14, 2025</span>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -796,6 +804,30 @@ export default function dashboard() {
                                 Submit
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showHistoricalSummary && (
+                <div className='fixed inset-0 flex items-center bg-black/40 justify-center z-50 backdrop-blur-sm'>
+                    <div className='bg-white flex flex-col rounded-xl shadow-lg w-1/2 h-1/2 overflow-auto m-18 p-8 border border-gray-200'>
+                        <div className='flex items-center justify-between mb-6'>
+                            <div>
+                                <h2 className='text-2xl font-bold text-gray-800'>Historical Summary</h2>
+                                <p className='text-gray-600'>View historical data for the selected product.</p>
+                            </div>
+                            <Calendar className='w-8 h-8 text-gray-400' />
+                        </div>
+
+                        <div className='space-y-4 h-3/4 overflow-y-auto border  border-gray-200 shadow-inner p-4 rounded-lg shaw'>
+                            <table>
+                                
+                            </table>
+                        </div>
+
+                        <button onClick={() => setShowHistoricalSummary(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
+                            Close
+                        </button>
                     </div>
                 </div>
             )}
