@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 
 const login: React.FC = () => {
-  const [userId, setUserId] = useState('');
+  const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -11,11 +11,11 @@ const login: React.FC = () => {
     setError('');
 
     router.post('/custom-login', {
-      user_id: userId,
+      user_name: userName,
       password: password,
     }, {
       onError: (errors) => {
-        setError(errors.password || errors.user_id || 'Login failed');
+        setError(errors.password || errors.user_name || 'Login failed');
       },
       onSuccess: () => {
         router.visit('/dashboard');
@@ -32,12 +32,12 @@ const login: React.FC = () => {
         <h2 className='font-bold text-2xl'>Login</h2>
         <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
           <div className='mb-4 mt-4'>
-            <label htmlFor="user_id" className='text-gray-400'>User ID</label>
+            <label htmlFor="user_id" className='text-gray-400'>User Name</label>
             <input
               type="text"
               id="user_id"
-              value={userId}
-              onChange={e => setUserId(e.target.value)}
+              value={userName}
+              onChange={e => setUserName(e.target.value)}
               required
               className='w-full p-2 mt-2 border border-gray-300 rounded'
               />

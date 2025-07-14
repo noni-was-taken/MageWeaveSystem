@@ -23,7 +23,7 @@ class AuthController extends Controller
         ]);
 
         // Get user from userInfo table
-        $user = DB::select("SELECT * FROM userInfo WHERE user_id = ?", [$request->user_id]);
+        $user = DB::select("SELECT * FROM userInfo WHERE user_name = ?", [$request->user_name]);
 
         if (!$user) {
             return back()->withErrors(['user_id' => 'User ID not found']);
