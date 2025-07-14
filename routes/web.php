@@ -193,6 +193,11 @@ Route::fallback(function () {
     if (!Session::has('user_id')) {
         return Inertia::location('/login');
     }
+
+    return Inertia::render('Errors/pagenotfound', [
+        'message' => 'Page not found',
+        'status' => 404
+    ]);
 });
 
 require __DIR__.'/settings.php';
