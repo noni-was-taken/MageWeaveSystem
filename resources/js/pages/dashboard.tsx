@@ -1,7 +1,7 @@
 import React, {use, useState, useEffect} from 'react';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage, router} from '@inertiajs/react';
-import { Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, CircleAlert, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
+import { Download, Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, CircleAlert, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
 
 
 
@@ -130,7 +130,7 @@ export default function dashboard() {
     const [actionType, setActionType] = useState<'sale' | 'restock' | null>(null);
     const [quantityInput, setQuantityInput] = useState('');
     const [showQtyPopup, setShowQtyPopup] = useState(false);
-    const [showHistoricalSummary, setShowHistoricalSummary] = useState(true);
+    const [showHistoricalSummary, setShowHistoricalSummary] = useState(false);
 
     const handleActionClick = (
         type: 'sale' | 'restock',
@@ -564,7 +564,7 @@ export default function dashboard() {
                                 <p className='text-gray-600'>{summaryData.weekRange}</p>
                                 <p className='text-sm text-gray-500'>{summaryData.date}</p>
                             </div>
-                            <Calendar className='w-8 h-8 text-gray-400' />
+                            <Calendar onClick={()=>setShowHistoricalSummary(true)}  className='w-8 h-8 text-gray-400 hover:text-black transition-all cursor-pointer' />
                         </div>
 
                         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
@@ -820,8 +820,20 @@ export default function dashboard() {
                         </div>
 
                         <div className='space-y-4 h-3/4 overflow-y-auto border  border-gray-200 shadow-inner p-4 rounded-lg shaw'>
-                            <table>
-                                
+                            <table className='min-w-full divide-gray-200'>
+                                <tr className='border-b border-gray-200'>
+                                    <th className='text-left py-2 px-4 text-gray-600 font-semibold'>Week</th>
+                                    <th className='text-right py-2 px-4 text-gray-600 font-semibold'>
+                                        Export
+                                    </th>
+                                </tr>
+                                {/* for-each this for backend */}
+                                <tr>
+                                    <td className='py-2 px-4'>July 14-20, 2025</td>
+                                    <td className='py-2 px-4 text-right justify-end flex mr-3'>
+                                        <Download className='text-gray-400 hover:text-black transition-all cursor-pointer'/>
+                                    </td>
+                                </tr>
                             </table>
                         </div>
 
