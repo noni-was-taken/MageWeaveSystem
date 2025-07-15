@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RecordLogsController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
@@ -8,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Exports\UpdateLogsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 // Show the login page (Inertia/React)
 Route::get('/', fn() => Inertia::render('login'));
@@ -16,12 +19,20 @@ Route::get('/login', fn() => Inertia::render('login'));
 // Handle login POST from React/Inertia
 Route::post('/custom-login', [AuthController::class, 'login']);
 
+Route::get('/test-export', function () {
+    $logs = DB::table('updateinfo')->get();
+
+    return Excel::download(new UpdateLogsExport($logs), 'test_export.xlsx');
+});
+
 Route::post('/logout', function () {
     Session::flush(); // Clear all session data
     return Inertia::location('/login');
 })->name('logout');
 
 Route::middleware(['auth.session'])->group(function () {
+        Route::get('/export-logs', [RecordLogsController::class, 'exportLatestWeek'])->name('export.logs');
+        
         Route::post('/products', [ProductController::class, 'store'])->name('products');
 
         Route::post('/products/{id}/restock', function (Illuminate\Http\Request $request, $id) {
