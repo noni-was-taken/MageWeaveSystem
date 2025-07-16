@@ -43,12 +43,19 @@ type DashboardProps = {
       totalStocksOrdered: number;
       totalSalesRevenue: number;
     };
+    records: {
+        record_id: number;
+        startDay: string;
+        endDay: string;
+        sheet_file: string;
+    }[];
   };
 };
 
 
 export default function dashboard() {
-    const { products, updateLogs, summaryData } = usePage<DashboardProps>().props; 
+    const { products, updateLogs, summaryData } = usePage<DashboardProps>().props;
+    const records = summaryData.records;
     const [currentDate, setCurrentDate] = useState('');
     const [dayOfWeek, setDayOfWeek] = useState('');
 
@@ -130,7 +137,7 @@ export default function dashboard() {
     const [actionType, setActionType] = useState<'sale' | 'restock' | null>(null);
     const [quantityInput, setQuantityInput] = useState('');
     const [showQtyPopup, setShowQtyPopup] = useState(false);
-    const [showHistoricalSummary, setShowHistoricalSummary] = useState(false);
+    const [showHistoricalSummary, setShowHistoricalSummary] = useState(true);
 
     const handleActionClick = (
         type: 'sale' | 'restock',
@@ -827,13 +834,18 @@ export default function dashboard() {
                                         Export
                                     </th>
                                 </tr>
-                                {/* for-each this for backend */}
-                                <tr>
-                                    <td className='py-2 px-4'>July 14-20, 2025</td>
-                                    <td className='py-2 px-4 text-right justify-end flex mr-3'>
-                                        <Download className='text-gray-400 hover:text-black transition-all cursor-pointer'/>
-                                    </td>
-                                </tr>
+                                {records?.map((rec) => (
+                                    <tr key={rec.record_id}>
+                                        <td className='py-2 px-4'>
+                                        {new Date(rec.startDay).toLocaleDateString()} - {new Date(rec.endDay).toLocaleDateString()}
+                                        </td>
+                                        <td className='py-2 px-4 text-right justify-end flex mr-3'>
+                                        <a href={`/download/${rec.record_id}`} className='text-gray-400 hover:text-black transition-all'>
+                                            <Download className='cursor-pointer' />
+                                        </a>
+                                        </td>
+                                    </tr>
+                                    ))}
                             </table>
                         </div>
 

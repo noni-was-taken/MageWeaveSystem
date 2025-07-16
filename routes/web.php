@@ -1,10 +1,11 @@
 <?php
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\RecordLogsController;
+use App\Http\Controllers\RecordExportController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,7 +32,23 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::middleware(['auth.session'])->group(function () {
-        Route::get('/export-logs', [RecordLogsController::class, 'exportLatestWeek'])->name('export.logs');
+    Route::get('/download/{record_id}', function ($record_id) {
+        $record = DB::table('records')->where('record_id', $record_id)->first();
+
+        if (!$record) {
+            abort(404, 'File record not found.');
+        }
+
+        $filePath = $record->sheet_file;
+
+        if (!Storage::disk('local')->exists($filePath)) {
+            abort(404, 'File does not exist on server.');
+        }
+
+        return Storage::disk('local')->download($filePath);
+    });
+
+        Route::get('/export-logs', [RecordExportController::class, 'autoExportWeeklyLogs']);
         
         Route::post('/products', [ProductController::class, 'store'])->name('products');
 
@@ -129,6 +146,7 @@ Route::middleware(['auth.session'])->group(function () {
     });
 
     Route::get('/dashboard', function () {
+        app(\App\Http\Controllers\RecordExportController::class)->autoExportWeeklyLogs();
         //dd(Session::get('user_id')); 
         $products = DB::select('SELECT * FROM products');
         $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
@@ -178,6 +196,8 @@ Route::middleware(['auth.session'])->group(function () {
 
         $topSales = collect($salesMap)->sortByDesc('total_sales')->take(3)->values()->all();
         $leastSold = collect($salesMap)->sortBy('total_sold_qty')->take(3)->values()->all();
+        $records = DB::table('records')->orderBy('startDay', 'desc')->get();
+
 
         return Inertia::render('dashboard', [
             'products' => $products,
@@ -194,9 +214,11 @@ Route::middleware(['auth.session'])->group(function () {
                 'totalOrders' => [
                     'totalStocksOrdered' => $totalOrderedQty,
                     'totalSalesRevenue' => $totalSalesRevenue,
-                ]
+                ],
+                'records' => $records // ✅ Add this line
             ]
         ]);
+
     });
 });
 

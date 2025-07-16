@@ -8,47 +8,56 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
-class UpdateLogsController extends Controller
+class RecordExportController extends Controller
 {
     public function autoExportWeeklyLogs()
-    {
-        // Get earliest and latest update log date
-        $earliestLog = DB::table('updateinfo')->orderBy('update_date', 'asc')->first();
-        $latestLog   = DB::table('updateinfo')->orderBy('update_date', 'desc')->first();
+{
+    $earliestLog = DB::table('updateinfo')->orderBy('update_date', 'asc')->first();
+    $latestLog   = DB::table('updateinfo')->orderBy('update_date', 'desc')->first();
 
-        if (!$earliestLog || !$latestLog) {
-            return response()->json(['message' => 'No logs to export.'], 404);
-        }
+    if (!$earliestLog || !$latestLog) {
+        return;
+    }
 
-        $start = Carbon::parse($earliestLog->update_date)->startOfWeek(Carbon::SUNDAY);
-        $end   = Carbon::parse($latestLog->update_date)->endOfWeek(Carbon::SATURDAY);
+    $start = Carbon::parse($earliestLog->update_date)->startOfWeek(Carbon::MONDAY);
+    $end   = Carbon::parse($latestLog->update_date)->endOfWeek(Carbon::SUNDAY);
 
-        while ($start->lessThanOrEqualTo($end)) {
-            $weekStart = $start->copy();
-            $weekEnd   = $start->copy()->endOfWeek(Carbon::SATURDAY);
+    $now = Carbon::now();
 
-            // Check if already exported
-            $exists = DB::table('records')
+    while ($start->lessThanOrEqualTo($end)) {
+        $weekStart = $start->copy();
+        $weekEnd   = $start->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $logs = DB::table('updateinfo')
+            ->whereBetween('update_date', [$weekStart, $weekEnd])
+            ->get();
+
+        if ($logs->isNotEmpty()) {
+            $filename = 'weekly_update_' . $weekStart->format('Ymd') . '_to_' . $weekEnd->format('Ymd') . '.xlsx';
+            $path = 'weekly_exports/' . $filename;
+
+            $record = DB::table('records')
                 ->whereDate('startDay', $weekStart)
                 ->whereDate('endDay', $weekEnd)
-                ->exists();
+                ->first();
 
-            if (!$exists) {
-                // Get logs for this week
-                $logs = DB::table('updateinfo')
-                    ->whereBetween('update_date', [$weekStart, $weekEnd])
-                    ->get();
+            // ✅ CASE 1: If it's the current week — overwrite the file
+            if ($now->between($weekStart, $weekEnd)) {
+                Excel::store(new UpdateLogsExport($logs), $path, 'local');
 
-                if ($logs->isNotEmpty()) {
-                    $filename = 'weekly_update_' . $weekStart->format('Ymd') . '_to_' . $weekEnd->format('Ymd') . '.xlsx';
-                    $path = 'weekly_exports/' . $filename;
-
-                    Excel::store(new UpdateLogsExport($logs), $path, 'local');
-
-                    // Store record
+                if ($record) {
+                    // Update existing record
+                    DB::table('records')
+                        ->where('record_id', $record->record_id)
+                        ->update([
+                            'sheet_file' => $path,
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    // Insert new record
                     DB::table('records')->insert([
-                        'startDay'   => $weekStart,
-                        'endDay'     => $weekEnd,
+                        'startDay' => $weekStart,
+                        'endDay' => $weekEnd,
                         'sheet_file' => $path,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -56,9 +65,21 @@ class UpdateLogsController extends Controller
                 }
             }
 
-            $start->addWeek(); // Move to next week
+            // ✅ CASE 2: If it's a past week and not yet recorded — create new file
+            elseif (!$record) {
+                Excel::store(new UpdateLogsExport($logs), $path, 'local');
+
+                DB::table('records')->insert([
+                    'startDay' => $weekStart,
+                    'endDay' => $weekEnd,
+                    'sheet_file' => $path,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
-        return response()->json(['message' => 'Weekly logs exported successfully.']);
+        $start->addWeek();
     }
+}
 }

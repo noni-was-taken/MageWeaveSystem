@@ -30,14 +30,6 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
     })
-    
-    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-    $schedule->call([App\Http\Controllers\RecordLogsController::class, 'autoExportWeeklyLogs'])->weekly();
-    })
-
-    ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('logs:export-weekly')->weekly();
-    })
 
     ->withExceptions(function (Exceptions $exceptions) { 
         //
