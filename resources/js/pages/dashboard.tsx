@@ -48,6 +48,7 @@ type DashboardProps = {
         startDay: string;
         endDay: string;
         sheet_file: string;
+        is_monthly: boolean;
     }[];
   };
 };
@@ -821,57 +822,62 @@ export default function dashboard() {
                         <div className='flex items-center justify-between mb-6'>
                             <div>
                                 <h2 className='text-2xl font-bold text-gray-800'>Historical Summary</h2>
-                                <p className='text-gray-600'>View historical data for the inventory.</p>
                                 <p className='text-gray-600'>View weekly and monthly historical data.</p>
                             </div>
                             <Calendar className='w-8 h-8 text-gray-400' />
                         </div>
 
-                        <div className='space-y-4 h-3/4 overflow-y-auto border  border-gray-200 shadow-inner p-4 rounded-lg shaw'>
-                            {/* weekly */}
+                        <div className='space-y-4 h-3/4 overflow-y-auto border border-gray-200 shadow-inner p-4 rounded-lg shaw'>
+  
+                            {/* Weekly Export Logs */}
                             <table className='min-w-full divide-gray-200'>
+                                <thead>
                                 <tr className='border-b border-gray-200'>
                                     <th className='text-left py-2 px-4 text-gray-600 font-semibold'>Week</th>
-                                    <th className='text-right py-2 px-4 text-gray-600 font-semibold'>
-                                        Export
-                                    </th>
+                                    <th className='text-right py-2 px-4 text-gray-600 font-semibold'>Export</th>
                                 </tr>
-                                {records?.map((rec) => (
+                                </thead>
+                                <tbody>
+                                {records?.filter(rec => !rec.is_monthly).map((rec) => (
                                     <tr key={rec.record_id}>
-                                        <td className='py-2 px-4 font-semibold'>
-                                        {new Date(rec.startDay).toLocaleDateString()} - {new Date(rec.endDay).toLocaleDateString()}
-                                        <td className='py-2 px-4'>
-                                        {new Date(rec.startDay).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(rec.endDay).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-
-                                        </td>
-                                        <td className='py-2 px-4 text-right justify-end flex mr-3'>
-                                        <a href={`/download/${rec.record_id}`} className='text-gray-400 hover:text-black transition-all'>
-                                            <Download className='cursor-pointer' />
-                                        </a>
-                                        </td>
-                                    </tr>
-                                    ))}    
-                            </table>
-                            {/* monthly */}
-                            <table  className='min-w-full divide-gray-200'>
-                                <tr className='border-b border-gray-200'>
-                                    <th className='text-left py-2 px-4 text-gray-600 font-semibold'>Month</th>
-                                    <th className='text-right py-2 px-4 text-gray-600 font-semibold'>
-                                        Export
-                                    </th>
-                                </tr>
-                                <tr>
                                     <td className='py-2 px-4 font-semibold'>
-                                        June 2025
+                                        {new Date(rec.startDay).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - 
+                                        {new Date(rec.endDay).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                     </td>
                                     <td className='py-2 px-4 text-right justify-end flex mr-3'>
-                                    <a className='text-gray-400 hover:text-black transition-all'>
+                                        <a href={`/download/${rec.record_id}`} className='text-gray-400 hover:text-black transition-all'>
                                         <Download className='cursor-pointer' />
-                                    </a>
-                                    </td>    
-                                </tr>
+                                        </a>
+                                    </td>
+                                    </tr>
+                                ))}
+                                </tbody>
                             </table>
-                        </div>
+
+                            {/* Monthly Export Logs */}
+                            <table className='min-w-full divide-gray-200'>
+                                <thead>
+                                <tr className='border-b border-gray-200'>
+                                    <th className='text-left py-2 px-4 text-gray-600 font-semibold'>Month</th>
+                                    <th className='text-right py-2 px-4 text-gray-600 font-semibold'>Export</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {records?.filter(rec => rec.is_monthly).map((rec) => (
+                                    <tr key={rec.record_id}>
+                                    <td className='py-2 px-4 font-semibold'>
+                                        {new Date(rec.startDay).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                    </td>
+                                    <td className='py-2 px-4 text-right justify-end flex mr-3'>
+                                        <a href={`/download/${rec.record_id}`} className='text-gray-400 hover:text-black transition-all'>
+                                        <Download className='cursor-pointer' />
+                                        </a>
+                                    </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                            </div>
 
                         <button onClick={() => setShowHistoricalSummary(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                             Close
