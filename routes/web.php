@@ -48,7 +48,7 @@ Route::middleware(['auth.session'])->group(function () {
         return Storage::disk('local')->download($filePath);
     });
 
-        Route::get('/export-logs', [RecordExportController::class, 'autoExportWeeklyLogs']);
+        Route::get('/export-logs', [RecordExportController::class, 'autoExportLogs']);
         
         Route::post('/products', [ProductController::class, 'store'])->name('products');
 
@@ -146,7 +146,7 @@ Route::middleware(['auth.session'])->group(function () {
     });
 
     Route::get('/dashboard', function () {
-        app(\App\Http\Controllers\RecordExportController::class)->autoExportWeeklyLogs();
+        app(\App\Http\Controllers\RecordExportController::class)->autoExportLogs();
         //dd(Session::get('user_id')); 
         $products = DB::select('SELECT * FROM products');
         $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
