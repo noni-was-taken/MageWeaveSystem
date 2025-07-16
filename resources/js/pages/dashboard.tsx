@@ -821,7 +821,7 @@ export default function dashboard() {
                         <div className='flex items-center justify-between mb-6'>
                             <div>
                                 <h2 className='text-2xl font-bold text-gray-800'>Historical Summary</h2>
-                                <p className='text-gray-600'>View historical data for the selected product.</p>
+                                <p className='text-gray-600'>View historical data for the inventory.</p>
                             </div>
                             <Calendar className='w-8 h-8 text-gray-400' />
                         </div>
@@ -837,7 +837,8 @@ export default function dashboard() {
                                 {records?.map((rec) => (
                                     <tr key={rec.record_id}>
                                         <td className='py-2 px-4'>
-                                        {new Date(rec.startDay).toLocaleDateString()} - {new Date(rec.endDay).toLocaleDateString()}
+                                        {new Date(rec.startDay).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(rec.endDay).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+
                                         </td>
                                         <td className='py-2 px-4 text-right justify-end flex mr-3'>
                                         <a href={`/download/${rec.record_id}`} className='text-gray-400 hover:text-black transition-all'>
