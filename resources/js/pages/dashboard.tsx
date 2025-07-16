@@ -817,16 +817,17 @@ export default function dashboard() {
 
             {showHistoricalSummary && (
                 <div className='fixed inset-0 flex items-center bg-black/40 justify-center z-50 backdrop-blur-sm'>
-                    <div className='bg-white flex flex-col rounded-xl shadow-lg w-1/2 h-1/2 overflow-auto m-18 p-8 border border-gray-200'>
+                    <div className='bg-white flex flex-col rounded-xl shadow-lg w-1/2 h-3/4 overflow-auto m-18 p-8 border border-gray-200'>
                         <div className='flex items-center justify-between mb-6'>
                             <div>
                                 <h2 className='text-2xl font-bold text-gray-800'>Historical Summary</h2>
-                                <p className='text-gray-600'>View historical data for the selected product.</p>
+                                <p className='text-gray-600'>View weekly and monthly historical data.</p>
                             </div>
                             <Calendar className='w-8 h-8 text-gray-400' />
                         </div>
 
                         <div className='space-y-4 h-3/4 overflow-y-auto border  border-gray-200 shadow-inner p-4 rounded-lg shaw'>
+                            {/* weekly */}
                             <table className='min-w-full divide-gray-200'>
                                 <tr className='border-b border-gray-200'>
                                     <th className='text-left py-2 px-4 text-gray-600 font-semibold'>Week</th>
@@ -836,7 +837,7 @@ export default function dashboard() {
                                 </tr>
                                 {records?.map((rec) => (
                                     <tr key={rec.record_id}>
-                                        <td className='py-2 px-4'>
+                                        <td className='py-2 px-4 font-semibold'>
                                         {new Date(rec.startDay).toLocaleDateString()} - {new Date(rec.endDay).toLocaleDateString()}
                                         </td>
                                         <td className='py-2 px-4 text-right justify-end flex mr-3'>
@@ -845,7 +846,26 @@ export default function dashboard() {
                                         </a>
                                         </td>
                                     </tr>
-                                    ))}
+                                    ))}    
+                            </table>
+                            {/* monthly */}
+                            <table  className='min-w-full divide-gray-200'>
+                                <tr className='border-b border-gray-200'>
+                                    <th className='text-left py-2 px-4 text-gray-600 font-semibold'>Month</th>
+                                    <th className='text-right py-2 px-4 text-gray-600 font-semibold'>
+                                        Export
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td className='py-2 px-4 font-semibold'>
+                                        June 2025
+                                    </td>
+                                    <td className='py-2 px-4 text-right justify-end flex mr-3'>
+                                    <a className='text-gray-400 hover:text-black transition-all'>
+                                        <Download className='cursor-pointer' />
+                                    </a>
+                                    </td>    
+                                </tr>
                             </table>
                         </div>
 
