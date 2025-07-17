@@ -3,9 +3,6 @@ import { type SharedData } from '@/types';
 import { Head, Link, usePage, router} from '@inertiajs/react';
 import { Download, Plus, ChartBar, Edit, Target, Package, TrendingUp, Clock, CircleAlert, ClockAlertIcon, Calendar, CalendarIcon, SquareKanban, MoveRightIcon} from 'lucide-react';
 
-
-
-
 type Product = {
   product_id: number;
   product_name: string;
@@ -840,7 +837,7 @@ export default function dashboard() {
                         <div className='flex items-center justify-between mb-6'>
                             <div>
                                 <h2 className='text-2xl font-bold text-gray-800'>Historical Summary</h2>
-                                <p className='text-gray-600'>View weekly and monthly historical data.</p>
+                                <p className='text-gray-600'>View historical data for the selected product.</p>
                             </div>
                             <Calendar className='w-8 h-8 text-gray-400' />
                         </div>
