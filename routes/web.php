@@ -54,7 +54,7 @@ Route::middleware(['auth.session'])->group(function () {
 
         Route::post('/products/{id}/restock', function (Illuminate\Http\Request $request, $id) {
             $qty = (int) $request->input('quantity');
-            $threshold = 10;
+            $threshold = 50;
 
             if ($qty <= 0) {
                 return response()->json(['message' => 'Invalid quantity'], 400);
@@ -90,7 +90,7 @@ Route::middleware(['auth.session'])->group(function () {
 
         Route::post('/products/{id}/sale', function (Illuminate\Http\Request $request, $id) {
             $qty = (int) $request->input('quantity');
-            $threshold = 10;
+            $threshold = 50;
 
             $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
 

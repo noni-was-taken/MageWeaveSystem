@@ -322,46 +322,35 @@ export default function dashboard() {
         item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-   const getLowStockAlerts = () => {
-    const alerts: {
-        message: string;
-        level: string;
-        daysLow: number;
-        sinceDate: string;
-    }[] = [];
+    const getLowStockAlerts = () => {
+        const alerts: { message: string; level: string; daysLow: number; sinceDate: string }[] = [];
 
         stockData.forEach(item => {
-            if (item.product_qty < 50 && item.low_stock_since) {
+            if (item.product_qty <= 50 && item.low_stock_since) {
                 const sinceDate = new Date(item.low_stock_since);
                 const now = new Date();
-                const msPerDay = 1000 * 60 * 60 * 24;
-                const daysLow = Math.floor((now.getTime() - sinceDate.getTime()) / msPerDay);
 
-                let level: 'info' | 'warning' | 'critical' = 'info';
-                let message = `${item.product_name} has been low on stock for ${daysLow} day${daysLow !== 1 ? 's' : ''}.`;
+                const diffTime = Math.abs(now.getTime() - sinceDate.getTime());
+                const daysLow = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-                if (item.product_qty <= 0) {
-                    level = 'critical';
-                    message = `${item.product_name} has been out of stock for ${daysLow} day${daysLow !== 1 ? 's' : ''}.`;
-                } else if (item.product_qty < 20) {
-                    level = 'warning';
-                }
+                let level = '';
+                if (item.product_qty <= 0) level = 'critical';
+                else if (item.product_qty <= 20) level = 'warning';
+                else level = 'info';
 
                 alerts.push({
-                    message,
+                    message: `${item.product_name} is ${level === 'critical' ? 'out of stock' : level === 'warning' ? 'critically low' : 'running low'} on stock.`,
                     level,
                     daysLow,
-                    sinceDate: sinceDate.toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                    }),
+                    sinceDate: sinceDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
                 });
             }
         });
 
         return alerts;
     };
+
+
 
     return (
         <>
