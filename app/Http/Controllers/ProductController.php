@@ -32,7 +32,7 @@ class ProductController extends Controller
 
     public function update(Request $request, $id)
 {
-    $threshold = 10; // Set your low stock threshold
+    $threshold = 50; // Set your low stock threshold
     $newQty = $request->product_qty;
 
     // Fetch current low_stock_since
