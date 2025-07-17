@@ -138,7 +138,7 @@ export default function dashboard() {
     const [actionType, setActionType] = useState<'sale' | 'restock' | null>(null);
     const [quantityInput, setQuantityInput] = useState('');
     const [showQtyPopup, setShowQtyPopup] = useState(false);
-    const [showHistoricalSummary, setShowHistoricalSummary] = useState(true);
+    const [showHistoricalSummary, setShowHistoricalSummary] = useState(false);
 
     const handleActionClick = (
         type: 'sale' | 'restock',
