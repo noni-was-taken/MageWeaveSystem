@@ -53,62 +53,78 @@ Route::middleware(['auth.session'])->group(function () {
         Route::post('/products', [ProductController::class, 'store'])->name('products');
 
         Route::post('/products/{id}/restock', function (Illuminate\Http\Request $request, $id) {
-        $qty = (int) $request->input('quantity');
+            $qty = (int) $request->input('quantity');
+            $threshold = 10;
 
-        if ($qty <= 0) {
-            return response()->json(['message' => 'Invalid quantity'], 400);
-        }
+            if ($qty <= 0) {
+                return response()->json(['message' => 'Invalid quantity'], 400);
+            }
 
-        $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
+            $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
 
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
+            if (!$product) {
+                return response()->json(['message' => 'Product not found'], 404);
+            }
 
-        $currentQty = $product[0]->product_qty;
-        $newQty = $currentQty + $qty;
+            $currentQty = $product[0]->product_qty;
+            $currentLowSince = $product[0]->low_stock_since;
+            $newQty = $currentQty + $qty;
 
-        // Update product
-        DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
+            // 👇 Update logic including low_stock_since
+            if ($newQty < $threshold && !$currentLowSince) {
+                DB::update("UPDATE products SET product_qty = ?, low_stock_since = NOW() WHERE product_id = ?", [$newQty, $id]);
+            } elseif ($newQty >= $threshold && $currentLowSince) {
+                DB::update("UPDATE products SET product_qty = ?, low_stock_since = NULL WHERE product_id = ?", [$newQty, $id]);
+            } else {
+                DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
+            }
 
-        // Insert into updateinfo
-        DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
-            $qty, // Positive = restock
-            $id,
-            'Restocked'
-        ]);
+            DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+                $qty,
+                $id,
+                'Restocked'
+            ]);
 
-        return response()->json(['message' => 'Restock recorded']);
-    });
+            return response()->json(['message' => 'Restock recorded']);
+        });
 
         Route::post('/products/{id}/sale', function (Illuminate\Http\Request $request, $id) {
-        $qty = (int) $request->input('quantity');
-        $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
+            $qty = (int) $request->input('quantity');
+            $threshold = 10;
 
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
+            $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
 
-        $currentQty = $product[0]->product_qty;
+            if (!$product) {
+                return response()->json(['message' => 'Product not found'], 404);
+            }
 
-        if ($qty > $currentQty) {
-            return response()->json(['message' => 'Not enough stock'], 400);
-        }
+            $currentQty = $product[0]->product_qty;
+            $currentLowSince = $product[0]->low_stock_since;
 
-        $newQty = $currentQty - $qty;
+            if ($qty > $currentQty) {
+                return response()->json(['message' => 'Not enough stock'], 400);
+            }
 
-        // 1. Update product
-        DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
+            $newQty = $currentQty - $qty;
 
-        // 2. Insert log
-        DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
-            -$qty, // Negative value = sale
-            $id,
-            'Sale'
-        ]);
+            // 👇 Update logic including low_stock_since
+            if ($newQty < $threshold && !$currentLowSince) {
+                DB::update("UPDATE products SET product_qty = ?, low_stock_since = NOW() WHERE product_id = ?", [$newQty, $id]);
+            } elseif ($newQty >= $threshold && $currentLowSince) {
+                DB::update("UPDATE products SET product_qty = ?, low_stock_since = NULL WHERE product_id = ?", [$newQty, $id]);
+            } else {
+                DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
+            }
 
-        return response()->json(['message' => 'Sale recorded']);
-    });
+            DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+                -$qty,
+                $id,
+                'Sale'
+            ]);
+
+            return response()->json(['message' => 'Sale recorded']);
+        });
+
 
         Route::delete('/products/{id}', function ($id) {
         DB::delete("DELETE FROM products WHERE product_id = ?", [$id]);
@@ -149,6 +165,15 @@ Route::middleware(['auth.session'])->group(function () {
         app(\App\Http\Controllers\RecordExportController::class)->autoExportLogs();
         //dd(Session::get('user_id')); 
         $products = DB::select('SELECT * FROM products');
+
+        foreach ($products as $product) {
+            if ($product->low_stock_since) {
+                $product->low_stock_duration = Carbon::parse($product->low_stock_since)->diffForHumans();
+            } else {
+                $product->low_stock_duration = null;
+            }
+        }
+
         $logs = DB::select("SELECT * FROM updateinfo ORDER BY update_id DESC");
 
         $startOfWeek = Carbon::now()->startOfWeek();

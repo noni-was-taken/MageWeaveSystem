@@ -11,6 +11,7 @@ type Product = {
   product_name: string;
   product_qty: number;
   product_price: number;
+  low_stock_since: string | null;
   old_qty?: number;
   current_qty?: number;
 };
@@ -151,6 +152,7 @@ export default function dashboard() {
             product_qty: item.product_qty,
             product_price: item.product_price,
             current_qty: item.product_qty,
+            low_stock_since: null,
         });
         setShowQtyPopup(true);
     };
@@ -323,24 +325,40 @@ export default function dashboard() {
         item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getLowStockAlerts = () => {
-        const alerts: { message: string; level: string }[] = [];
+   const getLowStockAlerts = () => {
+    const alerts: {
+        message: string;
+        level: string;
+        daysLow: number;
+        sinceDate: string;
+    }[] = [];
 
         stockData.forEach(item => {
-            if (item.product_qty <= 0) {
+            if (item.product_qty < 50 && item.low_stock_since) {
+                const sinceDate = new Date(item.low_stock_since);
+                const now = new Date();
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const daysLow = Math.floor((now.getTime() - sinceDate.getTime()) / msPerDay);
+
+                let level: 'info' | 'warning' | 'critical' = 'info';
+                let message = `${item.product_name} has been low on stock for ${daysLow} day${daysLow !== 1 ? 's' : ''}.`;
+
+                if (item.product_qty <= 0) {
+                    level = 'critical';
+                    message = `${item.product_name} has been out of stock for ${daysLow} day${daysLow !== 1 ? 's' : ''}.`;
+                } else if (item.product_qty < 20) {
+                    level = 'warning';
+                }
+
                 alerts.push({
-                    message: `${item.product_name} is out of stock.`,
-                    level: 'critical'
-                });
-            } else if (item.product_qty < 20) {
-                alerts.push({
-                    message: `${item.product_name} is critically low on stock.`,
-                    level: 'warning'
-                });
-            } else if (item.product_qty < 50) {
-                alerts.push({
-                    message: `${item.product_name} is running low on stock.`,
-                    level: 'info'
+                    message,
+                    level,
+                    daysLow,
+                    sinceDate: sinceDate.toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                    }),
                 });
             }
         });
@@ -551,10 +569,10 @@ export default function dashboard() {
                                     </div>
                                 </div>
                                 <div className='flex items-center text-gray-500 space-x-2'>
-                                    <ClockAlertIcon className='h-7 w-7 text-red-500'></ClockAlertIcon>
+                                    <ClockAlertIcon className='h-7 w-7 text-red-500' />
                                     <div className='flex flex-col items-center justify-between h-max'>
-                                        <span className='text-sm text-red-500 font-bold'>2 Days ago</span>
-                                        <span className='text-xs text-black'>July 14, 2025</span>
+                                        <span className='text-sm text-red-500 font-bold'>{alert.daysLow} Day{alert.daysLow !== 1 ? 's' : ''} ago</span>
+                                        <span className='text-xs text-black'>{alert.sinceDate}</span>
                                     </div>
                                 </div>
                             </div>
