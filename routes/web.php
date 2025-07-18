@@ -72,7 +72,7 @@ Route::middleware(['auth.session'])->group(function () {
 
             // 👇 Update logic including low_stock_since
             if ($newQty < $threshold && !$currentLowSince) {
-                DB::update("UPDATE products SET product_qty = ?, low_stock_since = NOW() WHERE product_id = ?", [$newQty, $id]);
+                DB::update("UPDATE products SET product_qty = ?, low_stock_since = ? WHERE product_id = ?", [$newQty, Carbon::now(), $id]);
             } elseif ($newQty >= $threshold && $currentLowSince) {
                 DB::update("UPDATE products SET product_qty = ?, low_stock_since = NULL WHERE product_id = ?", [$newQty, $id]);
             } else {
@@ -109,7 +109,7 @@ Route::middleware(['auth.session'])->group(function () {
 
             // 👇 Update logic including low_stock_since
             if ($newQty < $threshold && !$currentLowSince) {
-                DB::update("UPDATE products SET product_qty = ?, low_stock_since = NOW() WHERE product_id = ?", [$newQty, $id]);
+                DB::update("UPDATE products SET product_qty = ?, low_stock_since = ? WHERE product_id = ?", [$newQty, Carbon::now(), $id]);
             } elseif ($newQty >= $threshold && $currentLowSince) {
                 DB::update("UPDATE products SET product_qty = ?, low_stock_since = NULL WHERE product_id = ?", [$newQty, $id]);
             } else {
