@@ -569,7 +569,7 @@ export default function dashboard() {
             {/* Weekly Summary Viewer */}
             {showWeeklySummary && (
                 <div className='fixed inset-0 flex items-center bg-black/40 justify-center z-50 backdrop-blur-sm'>
-                    <div className='bg-white flex flex-col rounded-xl shadow-lg max-w-full overflow-auto m-18 p-8 border border-gray-200'>
+                    <div className='bg-white flex flex-col rounded-xl shadow-lg w-1/2 overflow-auto m-18 p-8 border border-gray-200'>
                         <div className='flex items-center justify-between mb-6'>
                             <div>
                                 <h2 className='text-2xl font-bold text-gray-800'>Summary</h2>
