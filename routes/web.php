@@ -32,6 +32,16 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::middleware(['auth.session'])->group(function () {
+    Route::put('/products/{id}/visibility', function (Request $request, $id) {
+    $isHidden = $request->input('is_hidden');
+
+    DB::update("UPDATE products SET is_hidden = ? WHERE product_id = ?", [
+        $isHidden ? 1 : 0, $id
+    ]);
+
+    return response()->json(['message' => 'Visibility updated']);
+    });
+
     Route::get('/download/{record_id}', function ($record_id) {
         $record = DB::table('records')->where('record_id', $record_id)->first();
 
@@ -164,7 +174,12 @@ Route::middleware(['auth.session'])->group(function () {
     Route::get('/dashboard', function () {
         app(\App\Http\Controllers\RecordExportController::class)->autoExportLogs();
         //dd(Session::get('user_id')); 
-        $products = DB::select('SELECT * FROM products');
+        $userRole = Session::get('user_role');
+        if ($userRole === 'Admin') {
+            $products = DB::select('SELECT * FROM products');
+        } else {
+            $products = DB::select('SELECT * FROM products WHERE is_hidden = 0');
+        }
 
         foreach ($products as $product) {
             if ($product->low_stock_since) {
@@ -240,7 +255,7 @@ Route::middleware(['auth.session'])->group(function () {
                     'totalStocksOrdered' => $totalOrderedQty,
                     'totalSalesRevenue' => $totalSalesRevenue,
                 ],
-                'records' => $records // ✅ Add this line
+                'records' => $records
             ]
         ]);
 

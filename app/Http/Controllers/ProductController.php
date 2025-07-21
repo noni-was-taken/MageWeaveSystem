@@ -2,74 +2,106 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
-use App\Models\Product;     
-use Illuminate\Support\Carbon;  
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Product::all());
+        // Optional: check role for filtering hidden products
+        $userRole = session('user_role'); // Adjust if using other session structure
+
+        if ($userRole === 'Admin') {
+            $products = DB::select("SELECT * FROM products");
+        } else {
+            $products = DB::select("SELECT * FROM products WHERE is_hidden = false");
+        }
+
+        return response()->json($products);
     }
 
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
 
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        return response()->json($product);
+        return response()->json($product[0]);
     }
 
     public function store(Request $request)
     {
-        Product::create([
-            'product_name' => $request->product_name,
-            'product_qty' => $request->product_qty,
-            'product_price' => $request->product_price,
+        DB::insert("INSERT INTO products (product_name, product_qty, product_price, is_hidden) VALUES (?, ?, ?, ?)", [
+            $request->product_name,
+            $request->product_qty,
+            $request->product_price,
+            false
         ]);
 
         return response()->json(['message' => 'Product created']);
     }
 
     public function update(Request $request, $id)
-{
+    {
         $threshold = 50;
-        $product = Product::find($id);
+
+        $product = DB::select("SELECT * FROM products WHERE product_id = ?", [$id]);
 
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        $product->product_name = $request->product_name;
-        $product->product_qty = $request->product_qty;
-        $product->product_price = $request->product_price;
+        $existing = $product[0];
+        $newQty = $request->product_qty;
+        $lowSince = $existing->low_stock_since;
 
-        if ($product->product_qty < $threshold && !$product->low_stock_since) {
-            $product->low_stock_since = Carbon::now();
+        if ($newQty < $threshold && !$lowSince) {
+            // Set low_stock_since
+            DB::update("UPDATE products SET product_name = ?, product_qty = ?, product_price = ?, low_stock_since = NOW() WHERE product_id = ?", [
+                $request->product_name,
+                $newQty,
+                $request->product_price,
+                $id
+            ]);
+        } else {
+            // Just update values, keep low_stock_since as is
+            DB::update("UPDATE products SET product_name = ?, product_qty = ?, product_price = ? WHERE product_id = ?", [
+                $request->product_name,
+                $newQty,
+                $request->product_price,
+                $id
+            ]);
         }
-
-        $product->save();
 
         return response()->json(['message' => 'Product updated']);
     }
 
-
     public function destroy($id)
     {
-        $product = Product::find($id);
+        DB::delete("DELETE FROM products WHERE product_id = ?", [$id]);
+        return response()->json(['message' => 'Product deleted']);
+    }
+
+    public function toggleVisibility($id)
+    {
+        $product = DB::select("SELECT is_hidden FROM products WHERE product_id = ?", [$id]);
 
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        $product->delete();
+        $isHidden = $product[0]->is_hidden;
+        $newState = !$isHidden;
 
-        return response()->json(['message' => 'Product deleted']);
+        DB::update("UPDATE products SET is_hidden = ? WHERE product_id = ?", [
+            $newState,
+            $id
+        ]);
+
+        return response()->json(['message' => 'Product visibility updated', 'is_hidden' => $newState]);
     }
 }
-

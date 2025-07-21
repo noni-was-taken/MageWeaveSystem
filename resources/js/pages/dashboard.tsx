@@ -9,6 +9,7 @@ type Product = {
   product_qty: number;
   product_price: number;
   low_stock_since: string | null;
+  is_hidden: boolean;
   old_qty?: number;
   current_qty?: number;
 };
@@ -97,6 +98,28 @@ export default function dashboard() {
     
     const [searchTerm, setSearchTerm] = useState('');   
     const [stockData, setStockData] = useState(products);
+
+    const toggleProductVisibility = async (productId: number, newVisibility: boolean) => {
+        try {
+            const response = await fetch(`/products/${productId}/visibility`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || ''
+                },
+                body: JSON.stringify({ is_hidden: newVisibility })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update product visibility');
+            }
+
+            // Optionally show a toast or reload
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+        }
+    };
     
         const handleUpdate = async () => {
             if (!selectedProduct) return;
@@ -140,7 +163,7 @@ export default function dashboard() {
 
     const handleActionClick = (
         type: 'sale' | 'restock',
-        item: { product_id: number; product_name: string; product_qty: number; product_price: number }
+        item: Product
     ) => {
         setActionType(type);
         setSelectedProduct({
@@ -150,6 +173,7 @@ export default function dashboard() {
             product_price: item.product_price,
             current_qty: item.product_qty,
             low_stock_since: null,
+            is_hidden: item.is_hidden,
         });
         setShowQtyPopup(true);
     };
@@ -319,8 +343,10 @@ export default function dashboard() {
     };
 
     const filteredStock = stockData.filter(item =>
-        item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+        item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (isAdmin || !item.is_hidden)
     );
+
 
     const getLowStockAlerts = () => {
         const alerts: { message: string; level: string; daysLow: number; sinceDate: string }[] = [];
@@ -457,7 +483,8 @@ export default function dashboard() {
                                 </thead>
                                 <tbody>
                                     {filteredStock.map((item) => (
-                                        <tr key={item.product_id} className='border-b border-gray-100 hover:bg-gray-50'>
+                                        <tr key={item.product_id} className={`border-b hover:bg-gray-50 ${item.is_hidden ? 'bg-red-100 text-red-900' : 'border-gray-100'}`}>
+
                                             <td className='py-3 px-4'>
 
                                                 {isAdmin && (
@@ -500,6 +527,18 @@ export default function dashboard() {
                                                     >
                                                         Restock
                                                     </button>
+
+                                                        {user.role === 'Admin' && (
+                                                            <button
+                                                                onClick={() => toggleProductVisibility(item.product_id, !item.is_hidden)}
+                                                                className={`px-3 py-1 rounded-lg text-white transition-colors duration-200 ${
+                                                                    item.is_hidden ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-600 hover:bg-red-700'
+                                                                }`}
+                                                            >
+                                                                {item.is_hidden ? 'Unhide' : 'Hide'}
+                                                            </button>
+                                                        )}
+
                                                 </div>
                                             </td>
                                         </tr>
