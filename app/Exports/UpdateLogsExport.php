@@ -13,14 +13,23 @@ class UpdateLogsExport implements FromCollection, WithHeadings
 {
     protected $logs;
 
-    public function __construct($logs)
+    public function __construct(array $logs)
     {
-        $this->logs = $logs;
+        $this->logs = collect($logs);
     }
 
     public function collection()
     {
-        return collect($this->logs);
+        return $this->logs->map(function ($log) {
+            return [
+                'update_id' => $log->update_id,
+                'value_update' => $log->value_update,
+                'product_id' => $log->product_id,
+                'description' => $log->description,
+                'user_id' => $log->user_id ?? 'N/A',
+                'update_date' => $log->update_date,
+            ];
+        });
     }
 
     public function headings(): array
@@ -30,7 +39,9 @@ class UpdateLogsExport implements FromCollection, WithHeadings
             'Value Update',
             'Product ID',
             'Description',
-            'Update Date'
+            'User ID',
+            'Update Date',
         ];
     }
 }
+

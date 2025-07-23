@@ -89,12 +89,12 @@ Route::middleware(['auth.session'])->group(function () {
                 DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
             }
 
-            DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+            DB::insert("INSERT INTO updateinfo (value_update, product_id, user_id, description) VALUES (?, ?, ?, ?)", [
                 $qty,
                 $id,
+                Session::get('user_id'),
                 'Restocked'
             ]);
-
             return response()->json(['message' => 'Restock recorded']);
         });
 
@@ -126,9 +126,10 @@ Route::middleware(['auth.session'])->group(function () {
                 DB::update("UPDATE products SET product_qty = ? WHERE product_id = ?", [$newQty, $id]);
             }
 
-            DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+            DB::insert("INSERT INTO updateinfo (value_update, product_id, user_id, description) VALUES (?, ?, ?, ?)", [
                 -$qty,
                 $id,
+                Session::get('user_id'),
                 'Sale'
             ]);
 
@@ -150,7 +151,7 @@ Route::middleware(['auth.session'])->group(function () {
             'old_qty' => 'required|integer', // for computing difference
         ]);
 
-        // 1. Update product
+
         DB::update("UPDATE products SET product_name = ?, product_qty = ?, product_price = ? WHERE product_id = ?", [
             $request->product_name,
             $request->product_qty,
@@ -158,13 +159,14 @@ Route::middleware(['auth.session'])->group(function () {
             $id
         ]);
 
-        // 2. Compute quantity difference
+
         $diff = $request->product_qty - $request->old_qty;
 
-        // 3. Insert update log
-        DB::insert("INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)", [
+        
+        DB::insert("INSERT INTO updateinfo (value_update, product_id, user_id, description) VALUES (?, ?, ?, ?)", [
             $diff,
             $id,
+            Session::get('user_id'),
             'Manual update'
         ]);
 

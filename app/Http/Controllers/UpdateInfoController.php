@@ -24,10 +24,11 @@ class UpdateInfoController extends Controller
         ]);
 
         DB::insert(
-            "INSERT INTO updateinfo (value_update, product_id, description) VALUES (?, ?, ?)",
+            "INSERT INTO updateinfo (value_update, product_id, user_id, description) VALUES (?, ?, ?, ?)",
             [
                 $request->value_update,
                 $request->product_id,
+                session('user_id'), // 👈 this gets the currently logged-in user
                 $request->description
             ]
         );
