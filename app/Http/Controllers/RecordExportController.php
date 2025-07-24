@@ -99,9 +99,14 @@ class RecordExportController extends Controller
                 ->where('is_monthly', true)
                 ->first();
 
-            if (!$record) {
-                Excel::store(new UpdateLogsExport($logs), $path, 'local');
+            Excel::store(new UpdateLogsExport($logs), $path, 'local');
 
+            if ($record) {
+                DB::table('records')->where('record_id', $record->record_id)->update([
+                    'sheet_file' => $path,
+                    'updated_at' => now(),
+                ]);
+            } else {
                 DB::table('records')->insert([
                     'startDay' => $monthFrom,
                     'endDay' => $monthTo,
