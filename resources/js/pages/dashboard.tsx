@@ -751,16 +751,16 @@ export default function dashboard() {
                         </div>
 
                         <div className='flex justify-between w-full'>
-                            <button onClick={handleDelete} className='bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-red-700 transition-colors duration-200 w-1/6'>
+                            {/* <button onClick={handleDelete} className='bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-red-700 transition-colors duration-200 w-1/6'>
                                     Delete  
-                                </button>
-                            <div className='flex space-x-2 w-1/2 items-end justify-end'>
-                                <button onClick={() => setShowEditPage(false)} className='bg-blue-600  text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-2/6'>
+                                </button> */}
+                            <div className='flex space-x-2 w-full items-end justify-between'>
+                                <button onClick={() => setShowEditPage(false)} className='bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-blue-700 transition-colors duration-200 w-1/6'>
                                     Close
                                 </button>    
                                     <button
                                     onClick={handleUpdate}
-                                    className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-green-700 transition-colors duration-200 w-2/6'
+                                    className='bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer mt-3 hover:bg-green-700 transition-colors duration-200 w-1/6'
                                     >
                                     Edit
                                     </button>
