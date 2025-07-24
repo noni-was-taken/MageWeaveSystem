@@ -483,7 +483,7 @@ export default function dashboard() {
                                 </thead>
                                 <tbody>
                                     {filteredStock.map((item) => (
-                                        <tr key={item.product_id} className={`border-b hover:bg-gray-50 ${item.is_hidden ? 'bg-red-100 text-red-900' : 'border-gray-100'}`}>
+                                        <tr key={item.product_id} className={`hover:bg-gray-50 transition-all ${item.is_hidden ? 'bg-red-100 text-red-900 hover:bg-red-50' : 'border-gray-100'}`}>
 
                                             <td className='py-3 px-4'>
 
@@ -531,7 +531,7 @@ export default function dashboard() {
                                                         {user.role === 'Admin' && (
                                                             <button
                                                                 onClick={() => toggleProductVisibility(item.product_id, !item.is_hidden)}
-                                                                className={`px-3 py-1 rounded-lg text-white transition-colors duration-200 ${
+                                                                className={`px-3 py-1 rounded-lg text-white transition-colors duration-200 cursor-pointer ${
                                                                     item.is_hidden ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-600 hover:bg-red-700'
                                                                 }`}
                                                             >
